@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flip the Catchphrase Studio</title>
+<style>
+:root{--ink:#173b3c;--paper:#f6f3eb;--card:#fffefb;--coral:#e95b44;--line:#dadfd6;--muted:#51676a;--mint:#dbf0d0}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,sans-serif}
+button,input,select,textarea{font:inherit}button,.import{cursor:pointer}button{border:1px solid var(--line);border-radius:9px;padding:10px 15px;background:var(--card);color:var(--ink);font-weight:650}
+button:hover,.import:hover{background:var(--mint)}button:disabled{opacity:.45;cursor:not-allowed}button.primary{background:var(--ink);color:white;border-color:var(--ink)}button.primary:hover{background:#245456}
+:focus-visible{outline:3px solid var(--coral);outline-offset:3px}
+.top{padding:18px 4vw;background:var(--ink);color:white;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}.brand{font-weight:800;letter-spacing:.03em}.badge{font-size:12px;border:1px solid #658583;border-radius:25px;padding:5px 12px}
+main{max-width:1440px;margin:auto;padding:32px 4vw}.hero{display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:center;margin-bottom:30px}
+.eyebrow{text-transform:uppercase;font-size:12px;letter-spacing:.16em;font-weight:750;color:var(--coral)}h1{font-size:clamp(36px,5vw,68px);line-height:1.05;letter-spacing:-.055em;margin:12px 0 16px}h1 em{font-style:normal;color:var(--coral)}h2{font-size:21px;margin:0 0 8px}h3{font-size:15px;margin:20px 0 10px}p{margin:8px 0 14px}.hint{color:var(--muted);font-size:13px}.hero p{max-width:580px}
+.quoteBox{background:var(--mint);border-radius:24px;padding:28px;transform:rotate(1deg);min-height:170px;display:flex;flex-direction:column;justify-content:center;border:1px solid #bdd1b4;overflow-wrap:anywhere}
+blockquote{font-size:clamp(22px,3vw,34px);font-weight:800;line-height:1.2;margin:15px 0}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;margin-bottom:18px}
+.step{display:inline-flex;background:var(--ink);color:white;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:12px;margin-right:8px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:650;margin-bottom:8px;min-width:0}
+input:not([type=checkbox]),select,textarea{width:100%;min-width:0;border:1px solid #bac9c6;border-radius:8px;background:white;padding:10px;color:var(--ink)}
+textarea{resize:vertical}.checks,.styles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.checks label,.checkline{display:flex;align-items:center;gap:7px;font-size:13px}.checkline{margin-top:10px}.style{display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13px}.style:has(input:checked){background:var(--mint);border-color:#709466}
+input[type=checkbox]{accent-color:var(--ink);width:17px;height:17px;flex-shrink:0}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.small{font-size:12px;padding:6px 10px}.import{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:9px;padding:10px 15px;font-weight:650}.import input{display:none}
+.status{padding:12px 16px;background:#e9f1e3;border-radius:10px;margin-bottom:18px;font-size:13px;min-height:44px}.status:empty{display:none}.status.error{background:#ffe6de;color:#813c26}
+.resultTop{display:flex;gap:14px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}.resultsPane{position:sticky;top:20px}.empty{padding:40px 18px;text-align:center;border:1px dashed #a9beb7;border-radius:15px;margin-top:22px;background:#f4f7ef}.empty strong{display:block;font-size:23px;margin-bottom:8px}
+.prompt{border-top:1px solid var(--line);margin-top:20px;padding-top:16px}.prompthead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.prompthead h3{margin:0}.prompt textarea{background:#f8faf4;font-size:13px;line-height:1.65}
+.favorite{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:10px 0}.favorite span{overflow-wrap:anywhere;font-size:13px}
+.footer{font-size:12px;color:var(--muted);margin:24px 0}.librarybar{display:flex;align-items:center;gap:10px;justify-content:space-between}
+[hidden]{display:none!important}@media(max-width:900px){.workspace{grid-template-columns:1fr}.resultsPane{position:static}.hero{grid-template-columns:1fr}.quoteBox{transform:none}main{padding:24px 5vw}.panel{padding:18px}}@media(max-width:480px){.fields{grid-template-columns:1fr}.styles{grid-template-columns:1fr 1fr}.checks{grid-template-columns:1fr}.top{padding:14px 5vw}.style{padding:9px;font-size:12px}}
+
+/* Guided studio layout: existing controls are preserved in separate panels. */
+main{max-width:1320px}
+.hero{min-height:460px;padding:50px 24px;gap:50px;margin:10px 0 20px}
+.hero h1{font-size:clamp(42px,5.5vw,76px);max-width:760px}
+.hero .primary{padding:15px 24px;margin-right:10px;font-size:17px}
+.hero #example{border:0;background:transparent;padding:12px 0;font-size:14px}
+.quoteBox{position:relative;transform:rotate(-3deg);min-height:260px;border-radius:28px;box-shadow:12px 14px 0 #eadcca}
+.quoteBox:before{content:"“";position:absolute;top:-12px;right:20px;color:#9cbc8c;font-size:120px;line-height:1;pointer-events:none}
+.quoteBox blockquote{position:relative;font-size:clamp(26px,3.5vw,46px)}
+.heroStats{display:flex;gap:9px;flex-wrap:wrap;margin-top:26px}
+.heroStats span{font-size:12px;padding:7px 11px;border:1px solid var(--line);border-radius:30px;background:#fffefb}
+.welcomeGuide{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:0 0 32px}
+.welcomeGuide>div{padding:22px;border:1px solid var(--line);background:var(--card);border-radius:16px}
+.welcomeGuide h3{font-size:18px;margin:8px 0}
+.studio{display:grid;grid-template-columns:195px minmax(0,1fr);gap:26px;align-items:start}
+.studio>*{min-width:0}.studioNav{padding:18px 12px;position:sticky;top:14px}
+.studioNav [role=tablist]{display:flex;flex-direction:column;gap:6px;margin-bottom:24px}
+.studioNav [role=tab]{text-align:left;border:0;background:transparent;padding:12px;font-size:14px;font-weight:650}
+.studioNav [aria-selected=true]{background:var(--ink);color:white}
+.studioNav .eyebrow{font-size:10px;padding:0 12px}
+.tabPanel .panel{margin:0;min-height:280px;padding:30px}
+.tabPanel h2{font-size:29px;letter-spacing:-.025em}
+.tabPanel .fields{gap:18px}
+.tabPanel .field{font-size:14px}
+.tabPanel input:not([type=checkbox]),.tabPanel select{padding:13px}
+.tabPanel .styles{grid-template-columns:repeat(3,minmax(0,1fr))}
+.advanced{padding:18px;margin:22px 0;border:1px solid var(--line);border-radius:12px;background:#f7f8f1}
+.advanced summary{font-size:14px;font-weight:700;cursor:pointer}
+.advanced>.field,.advanced>.fields{margin-top:16px}
+.advanced .checks{margin-top:20px}
+.studioToolbar{margin:22px 0 0 221px;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:15px}
+.workflow,.remixActions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.workflow{justify-content:space-between;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.remixActions #generate{margin-left:auto}
+.studioToolbar .hint{font-size:12px;margin:12px 0 0}
+#saveState{margin-top:20px}
+#batchDetails{padding:14px;margin:18px 0;border:1px solid var(--line);border-radius:12px}
+#batchDetails summary{font-weight:650;cursor:pointer}
+#batchText{margin-top:10px}
+.status{margin-bottom:20px}
+@media(max-width:900px){.hero{padding:26px 0;min-height:0;gap:25px}.quoteBox{min-height:200px;box-shadow:7px 9px 0 #eadcca}.studio{grid-template-columns:1fr;gap:14px}.studioNav{position:static;padding:0}.studioNav .eyebrow{display:none}.studioNav [role=tablist]{flex-direction:row;overflow-x:auto;gap:6px;margin-bottom:8px;padding-bottom:5px}.studioNav [role=tab]{white-space:nowrap;flex-shrink:0;font-size:12px;padding:10px}.studioNav>button{font-size:12px}.studioToolbar{margin-left:0}.tabPanel .panel{padding:22px}.welcomeGuide{gap:10px}}
+@media(max-width:560px){.welcomeGuide{grid-template-columns:1fr}.welcomeGuide>div{padding:16px}.hero h1{font-size:43px}.hero .primary{display:block;width:100%;margin:0 0 8px}.quoteBox{transform:none}.tabPanel .styles{grid-template-columns:repeat(2,minmax(0,1fr))}.tabPanel .fields{grid-template-columns:1fr}.tabPanel h2{font-size:25px}.remixActions{gap:7px}.remixActions button{padding:9px 11px;font-size:12px}.remixActions #generate{margin-left:0;width:100%;order:-1}.heroStats span{font-size:11px}}
+
+
+.topActions{display:flex;align-items:center;gap:14px}.topActions button{color:white;background:transparent;border-color:#658583;font-size:13px}.menuButton{display:flex;gap:10px;align-items:center}.menuButton span:first-child{font-size:24px;line-height:1}.hero{min-height:520px}.studioNav{position:static;padding:0}.studioNav [role=tablist]{flex-direction:column;overflow:visible;margin:14px 0}.studioNav [role=tab]{white-space:normal;font-size:15px}.menuDialog #startCreating{width:100%;margin:12px 0}.menuDialog{margin:0 0 0 auto;width:min(360px,92vw);height:100dvh;max-height:100dvh;border:0;border-left:1px solid var(--line);padding:26px;background:var(--paper);color:var(--ink)}.helpDialog{width:min(580px,92vw);max-height:86dvh;padding:28px;border:1px solid var(--line);border-radius:20px;color:var(--ink);background:var(--card)}dialog::backdrop{background:rgba(15,38,39,.5)}.dialogHead{display:flex;justify-content:space-between;align-items:center;gap:18px}.dialogHead h2{margin:0;font-size:23px}.dialogClose{font-size:25px;padding:2px 11px}.helpDialog h3{font-size:16px}.helpDialog p{font-size:14px}.helpDialog .primary{margin-top:12px}.top{position:sticky;top:0;z-index:10}.studioToolbar{margin-left:0}
+@media(max-width:560px){.top{gap:10px}.brand{font-size:14px}.topActions{gap:7px}.topActions button{padding:7px 9px;font-size:12px}.menuButton span:last-child{display:none}.hero{min-height:0}.helpDialog{padding:22px}}
+.presetPreview{padding:18px;border:1px solid var(--line);border-radius:12px;background:#f4f7ef;margin:18px 0}.presetPreview:empty{display:none}.presetPreview blockquote{font-size:25px}
+
+button,.import{min-height:44px}.style,.checkline{min-height:44px}.eyebrow{color:#aa3c2c}.topActions button{min-height:44px}.helpDialog{overflow-y:auto}.studioContent{min-width:0}.presetPreview{overflow-wrap:anywhere}
+@media(max-width:560px){.remixActions button{min-height:44px}.topActions button{min-height:44px}.prompthead{flex-wrap:wrap}}
+</style></head><body>
+<header class="top"><span class="brand">Flip the Catchphrase Studio</span><span class="badge">Say it. Swap it. Style it.</span></header>
+<main><section class="hero"><div><span class="eyebrow">The merchandise prompt studio</span><h1>Same saying.<br><em>New main character.</em></h1><p>Turn spoken TikTok catchphrases into character-swap prompts for tees, totes and tumblers. Pick your styles. Get one complete prompt for each.</p><button id="example">Try the truck example →</button></div><div class="quoteBox"><span class="eyebrow">Your exact words</span><blockquote id="quote">Your saying goes here.</blockquote><span class="hint">Text prompts only · no image-generation credits needed</span></div></section>
+<div id="notice" class="status" role="status" aria-live="polite"></div>
+<div class="workspace"><div>
+<section class="panel"><h2><span class="step">1</span>Pick the saying</h2><p class="hint">Search starter examples or type your own exact phrase. Browse 118 source-linked catchphrases from viral clips, TikTok, reality TV, sitcoms, movies and gaming. These are archived examples, not a live trend ranking.</p><label class="field"><span>Search sayings / enter your own</span><input id="saying" data-field="saying" list="sayings" maxlength="10000" placeholder="Type a saying or choose an example…" autocomplete="off"></label><datalist id="sayings"></datalist><div class="librarybar"><button id="addSaying" class="small">Save saying</button><span id="libraryCount" class="hint"></span></div></section>
+<section class="panel"><h2><span class="step">2</span>Keep the scene. Swap the star.</h2><p class="hint">Choose a scene preset or describe your scene. Swap the character while keeping the pose and layout you describe.</p><div id="sceneFields"></div></section>
+<section class="panel"><h2><span class="step">3</span>Merchandise & art style</h2><div id="productFields"></div><h3>Select one or more styles</h3><p class="hint">Each selected style gets its own separate prompt.</p><div id="styles" class="styles"></div></section>
+<section class="panel"><h2><span class="step">4</span>Typography</h2><div id="typeFields"></div><div class="actions"><button id="generate" class="primary">Generate prompts →</button><button id="reset">Reset form</button></div><p id="saveState" class="hint"></p></section>
+</div><aside class="resultsPane"><section class="panel"><div class="resultTop"><div><span class="eyebrow">Your prompt collection</span><h2>Ready to copy & create</h2><span id="resultCount" class="hint"></span></div></div><div class="actions"><button id="copyAll" disabled>Copy All</button><button id="copyBatch" disabled>Copy Batch Prompt</button><button id="saveFavorite" disabled>Save Favorite</button></div><details id="batchDetails" hidden><summary>Batch prompt · separate individual canvases</summary><p class="hint">Copy Batch Prompt adds instructions for one separate image per selected style, with variety and no collage. Paste it into an image generator that supports multiple outputs. This tool copies text; the image generator controls batching.</p><textarea id="batchText" aria-label="Batch prompt for separate individual canvases" readonly rows="10"></textarea></details><div id="empty" class="empty"><strong>One phrase. Many possibilities.</strong><p class="hint">Choose a saying, describe your scene, select styles, then click Generate prompts.</p></div><div id="results"></div><textarea id="manualCopy" aria-label="Manual clipboard fallback" rows="8" hidden></textarea></section>
+<section class="panel"><h2>Saved favorites <span id="favoriteCount" class="badge"></span></h2><div id="favorites"></div><div class="actions"><button id="export">Export backup</button><label class="import">Import backup<input id="import" type="file" accept=".json,application/json"></label></div><p class="hint">Backups include your draft, saved sayings and favorites. Imports merge collections. Reset preserves collections. Browser storage belongs to this file or website address; export before switching devices or clearing browser data.</p></section>
+</aside></div>
+<p class="footer">Independent creative tool · not affiliated with TikTok. Check text accuracy, print templates, and permission to use a saying before selling a design. Vector, embroidery and rhinestone styles create visual concepts, not production-ready vector, stitch or stone-placement files.</p>
+</main><script>
+
+const APP_NAME="Flip the Catchphrase Studio";
+const STYLES={
+"Cartoon":"Expressive clean cartoon illustration, confident outlines, readable shapes and lively color.",
+"Comic book":"Comic-book inkwork, bold contour lines, halftone shading and dynamic graphic shapes.",
+"Retro / vintage":"Vintage screen-print aesthetic, muted nostalgic colors and intentional distressed texture.",
+"Pop art":"Pop-art color blocking, punchy contrast and controlled Ben-Day dots.",
+"Graffiti":"Graffiti-inspired lettering and illustration, vibrant spray-paint textures with a clean readable silhouette.",
+"Sticker":"Die-cut sticker illustration, thick clean outline and a cohesive compact silhouette.",
+"Vector-style":"Flat vector-style illustration, precise edges, simplified shapes and solid color fills; raster output is not an actual vector file.",
+"Watercolor":"Painterly watercolor washes, delicate pigment variation and clear focal details.",
+"Clay-style":"Handcrafted clay appearance, sculpted rounded forms and tactile stop-motion-inspired texture.",
+"3D":"Polished stylized 3D rendering, dimensional forms, soft studio lighting and controlled highlights.",
+"Photorealistic":"Photorealistic rendering with believable anatomy, natural lighting and detailed materials.",
+"Embroidery-inspired":"Embroidery-inspired artwork with visible thread texture and stitched contours; concept artwork, not a machine stitch file.",
+"Rhinestone-inspired":"Rhinestone-inspired artwork with faceted sparkling stones and crisp lettering; concept artwork, not a stone-placement template."
+};
+const CATCHPHRASES=[{"phrase":"Very demure, very mindful.","category":"TikTok & creator catchphrases","sourceURL":"https://knowyourmeme.com/memes/very-demure-very-mindful","title":"Very Demure, Very Mindful | Know Your Meme","checked":"2026-10-12"},{"phrase":"Mama, a girl behind you.","category":"TikTok & creator catchphrases","sourceURL":"https://dailydot.com/mama-a-girl-behind-you-meme","title":"'Mama A Girl Behind You' Meme Origins","checked":"2026-10-12"},{"phrase":"You need to leave!","category":"Reality TV, shade & viral reactions","sourceURL":"https://digitalcultures.net/memes/you-need-to-leave/","title":"You Need to Leave – Meaning, Origin, Usage","checked":"2026-10-12"},{"phrase":"It's corn!","category":"TikTok & creator catchphrases","sourceURL":"https://www.indy100.com/viral/its-corn-tiktok-trend-2657950996","title":"Recess Therapy interview / Corn Kid","checked":"2026-10-12"},{"phrase":"And I oop!","category":"TikTok & creator catchphrases","sourceURL":"https://knowyourmeme.com/memes/jasmine-masters-and-i-oop","title":"Jasmine Masters \"And I Oop\" | Know Your Meme","checked":"2026-10-12"},{"phrase":"Ain't nobody got time for that.","category":"Reality TV, shade & viral reactions","sourceURL":"https://knowyourmeme.com/sensitive/memes/sweet-brown-aint-nobody-got-time-for-that","title":"Sweet Brown / Ain't Nobody Got Time for That | Know Your Meme","checked":"2026-10-12"},{"phrase":"Hide yo kids, hide yo wife.","category":"Reality TV, shade & viral reactions","sourceURL":"https://knowyourmeme.com/memes/antoine-dodson-bed-intruder","title":"Antoine Dodson's spoken news interview","checked":"2026-10-12"},{"phrase":"It's above me now.","category":"Reality TV, shade & viral reactions","sourceURL":"https://memecontext.com/its-above-me-now/","title":"It’s Above Me Now","checked":"2026-10-12"},{"phrase":"Who gon' check me, boo?","category":"Reality TV, shade & viral reactions","sourceURL":"https://knowyourmeme.com/memes/who-gon-check-me-boo--2","title":"Who Gon Check Me Boo | Know Your Meme","checked":"2026-10-12"},{"phrase":"I don't know her.","category":"Reality TV, shade & viral reactions","sourceURL":"https://knowyourmeme.com/memes/i-dont-know-her/","title":"I Don't Know Her | Know Your Meme","checked":"2026-10-12"},{"phrase":"Kim, there's people that are dying.","category":"Reality TV, shade & viral reactions","sourceURL":"https://www.washingtonpost.com/technology/2020/05/15/kim-kardashian-theres-people-that-are-dying/","title":"‘Kim, there’s people that are dying’ has become a Kardashian meme of the moment - The Washington Post","checked":"2026-10-12"},{"phrase":"You're doing amazing, sweetie.","category":"Reality TV, shade & viral reactions","sourceURL":"https://www.dictionary.com/culture/slang/youre-doing-amazing-sweetie","title":"you’re doing amazing, sweetie | Slang | Dictionary.com","checked":"2026-10-12"},{"phrase":"Bye, Felicia.","category":"Movie catchphrases","sourceURL":"https://knowyourmeme.com/sensitive/memes/bye-felicia","title":"Bye Felicia | Know Your Meme","checked":"2026-10-12"},{"phrase":"Not today, Satan.","category":"Reality TV, shade & viral reactions","sourceURL":"https://milksandwich.com/blogs/whats-up/not-today-satan-origin-meaning","title":"Not Today Satan Origin and Meaning | Milk Sandwich","checked":"2026-10-12"},{"phrase":"Sashay away.","category":"Reality TV, shade & viral reactions","sourceURL":"https://pancocojams.blogspot.com/2014/04/the-origins-and-meanings-of-shante-you.html","title":"pancocojams: The Origins And Meanings Of \"Shante You Stay\" & \"Sashay Away\"","checked":"2026-10-12"},{"phrase":"Shantay, you stay.","category":"Reality TV, shade & viral reactions","sourceURL":"https://freedict.com/slang/shantay-you-stay","title":"Shantay, you stay — Meaning & Origin | FreeDict Slang","checked":"2026-10-12"},{"phrase":"Oh my God, they were roommates.","category":"Vine & throwback viral clips","sourceURL":"https://knowyourmeme.com/memes/oh-my-god-they-were-roommates","title":"Oh My God, They Were Roommates | Know Your Meme","checked":"2026-10-12"},{"phrase":"Road work ahead? Uh, yeah, I sure hope it does.","category":"Vine & throwback viral clips","sourceURL":"https://knowyourmeme.com/memes/road-work-ahead","title":"Road Work Ahead | Know Your Meme","checked":"2026-10-12"},{"phrase":"What are those?","category":"Vine & throwback viral clips","sourceURL":"https://knowyourmeme.com/memes/what-are-those","title":"What Are Those? | Know Your Meme","checked":"2026-10-12"},{"phrase":"Damn, Daniel!","category":"Vine & throwback viral clips","sourceURL":"https://knowyourmeme.com/memes/damn-daniel","title":"Damn Daniel | Know Your Meme","checked":"2026-10-12"},{"phrase":"It is Wednesday, my dudes.","category":"Vine & throwback viral clips","sourceURL":"https://knowyourmeme.com/memes/it-is-wednesday-my-dudes","title":"It Is Wednesday My Dudes | Know Your Meme","checked":"2026-10-12"},{"phrase":"It's an avocado! Thanks!","category":"Vine & throwback viral clips","sourceURL":"https://imgflip.com/memetemplate/167475959/its-an-avocadothanks","title":"it's an avocado...thanks Blank Template - Imgflip","checked":"2026-10-12"},{"phrase":"Hi, welcome to Chili's.","category":"Vine & throwback viral clips","sourceURL":"https://memecontext.com/hi-welcome-to-chilis/","title":"Hi, Welcome To Chili's","checked":"2026-10-12"},{"phrase":"I smell like beef.","category":"Vine & throwback viral clips","sourceURL":"https://knowyourmeme.com/memes/i-smell-like-beef","title":"I Smell Like Beef | Know Your Meme","checked":"2026-10-12"},{"phrase":"I could've dropped my croissant!","category":"Vine & throwback viral clips","sourceURL":"https://knowyourmeme.com/memes/i-couldve-dropped-my-croissant","title":"I Could've Dropped My Croissant | Know Your Meme","checked":"2026-10-12"},{"phrase":"I'm in me mum's car.","category":"Vine & throwback viral clips","sourceURL":"https://meme.com/memes/im-in-me-mums-car-broom-broom","title":"I'm in Me Mum's Car, Broom Broom Meme Explained","checked":"2026-10-12"},{"phrase":"I have the power of God and anime on my side.","category":"Vine & throwback viral clips","sourceURL":"https://digitalcultures.net/memes/i-have-the-power-of-god-and-anime-on-my-side/","title":"I Have the Power of God and Anime on My Side – Meaning, Origin, Usage","checked":"2026-10-12"},{"phrase":"Why are you running?","category":"TikTok & internet reactions","sourceURL":"https://factually.co/fact-checks/society/why-are-you-running-meaning-and-interpretations-8f6fb4","title":"Why Is the 'Why Are You Running?' Meme So Popular?","checked":"2026-10-12"},{"phrase":"Emotional damage!","category":"TikTok & internet reactions","sourceURL":"https://knowyourmeme.com/memes/emotional-damage","title":"Emotional Damage | Know Your Meme","checked":"2026-10-12"},{"phrase":"Haiyaa!","category":"TikTok & internet reactions","sourceURL":"https://zh.wikipedia.org/wiki/%E9%BB%83%E7%91%BE%E7%91%9C","title":"黃瑾瑜","checked":"2026-10-12"},{"phrase":"Bombastic side eye.","category":"TikTok & creator catchphrases","sourceURL":"https://knowyourmeme.com/editorials/guides/what-is-bombastic-side-eye-the-tiktok-trend-explained","title":"What Is 'Bombastic Side Eye?' The TikTok Trend Explained | Know Your Meme","checked":"2026-10-12"},{"phrase":"Criminal offensive side eye.","category":"TikTok & creator catchphrases","sourceURL":"https://knowyourmeme.com/editorials/guides/what-is-bombastic-side-eye-the-tiktok-trend-explained","title":"Bombastic Side Eye spoken TikTok clip","checked":"2026-10-12"},{"phrase":"Let him cook.","category":"TikTok & internet reactions","sourceURL":"https://dailydot.com/let-him-cook-meme","title":"Let Him Cook Meme: What Is It, And How Is It Used?","checked":"2026-10-12"},{"phrase":"It's giving.","category":"TikTok & internet reactions","sourceURL":"https://knowyourmeme.com/memes/its-giving","title":"It's Giving | Know Your Meme","checked":"2026-10-12"},{"phrase":"Delulu is the solulu.","category":"TikTok & internet reactions","sourceURL":"https://en.wikipedia.org/wiki/Delulu","title":"Delulu","checked":"2026-10-12"},{"phrase":"Touch grass.","category":"TikTok & internet reactions","sourceURL":"https://meme.com/memes/touch-grass","title":"Touch Grass Meme: Meaning, Origin & Examples | Meme Wiki","checked":"2026-10-12"},{"phrase":"No thoughts, head empty.","category":"TikTok & internet reactions","sourceURL":"https://meme.com/memes/no-thoughts-head-empty","title":"No Thoughts Head Empty Meme, Origin, Meaning & Examples | Meme Wiki","checked":"2026-10-12"},{"phrase":"Caught in 4K.","category":"TikTok & internet reactions","sourceURL":"https://knowyourmeme.com/memes/caught-in-4k","title":"Caught in 4K | Know Your Meme","checked":"2026-10-12"},{"phrase":"We listen and we don't judge.","category":"TikTok & internet reactions","sourceURL":"https://slanginternet.com/gen-z/trending-slang/we-listen-and-we-dont-judge/","title":"What Does We Listen and We Don’t Judge Mean? - slanginternet","checked":"2026-10-12"},{"phrase":"Hear me out.","category":"TikTok & internet reactions","sourceURL":"https://knowyourmeme.com/videos/414509-ok-hear-me-out","title":"'Hear Me Out ...' The Classic Phrase Used To Express TikTok's Most Bizarre Crushes | OK, Hear Me Out | Know Your Meme","checked":"2026-10-12"},{"phrase":"Chicken jockey!","category":"Movie catchphrases","sourceURL":"https://knowyourmeme.com/editorials/guides/whats-the-chicken-jockey-meme-from-the-minecraft-movie-jack-black-as-steve-and-his-famous-weird-quote-explained","title":"What's The 'Chicken Jockey' Meme From The 'Minecraft' Movie? Jack Black As Steve... | Know Your Meme","checked":"2026-10-12"},{"phrase":"I am Steve.","category":"Movie catchphrases","sourceURL":"https://meme.com/memes/i-am-steve","title":"I Am Steve Meme: Jack Black's Minecraft Movie Line","checked":"2026-10-12"},{"phrase":"Release the hounds!","category":"Sitcom & comedy catchphrases","sourceURL":"https://gifrific.com/mr-burns-saying-release-the-hounds-the-simpsons/","title":"Mr. Burns Saying “Release the Hounds” (The Simpsons) | Gifrific","checked":"2026-10-12"},{"phrase":"Nobody's gonna know.","category":"TikTok & internet reactions","sourceURL":"https://knowyourmeme.com/videos/284097-nobodys-gonna-know","title":"Nobody's Gonna Know | Know Your Meme","checked":"2026-10-12"},{"phrase":"They're gonna know.","category":"TikTok & internet reactions","sourceURL":"https://knowyourmeme.com/videos/284097-nobodys-gonna-know","title":"Nobody's Gonna Know | Know Your Meme","checked":"2026-10-12"},{"phrase":"Don't be suspicious.","category":"TikTok & internet reactions","sourceURL":"https://www.esquire.com/entertainment/tv/a35600077/dont-be-suspicious-meme-explained-parks-and-recreation-ben-schwartz-jenny-slate-interview/","title":"Don't Be Suspicious Song Meme Explained - Ben Schwartz and Jenny Slate Weigh On the Parks and Rec Scene","checked":"2026-10-12"},{"phrase":"I said what I said.","category":"TikTok & internet reactions","sourceURL":"https://www.blacksdictionary.com/entry/isaidwhatisaid","title":"I said what I said — Black's Dictionary","checked":"2026-10-12"},{"phrase":"It's a chicken salad.","category":"TikTok & creator catchphrases","sourceURL":"https://knowyourmeme.com/memes/its-a-chicken-salad-from-81st-deli","title":"It's A Chicken Salad / From 81st Deli | Know Your Meme","checked":"2026-10-12"},{"phrase":"How you doin'?","category":"Sitcom & comedy catchphrases","sourceURL":"https://en.wikipedia.org/wiki/Friends","title":"Joey's catchphrase in Friends","checked":"2026-10-12"},{"phrase":"We were on a break!","category":"Sitcom & comedy catchphrases","sourceURL":"https://friends.fandom.com/wiki/%22We_Were_On_A_Break%21%22","title":"\"We Were On A Break!\" | Friends Central | Fandom","checked":"2026-10-12"},{"phrase":"Pivot!","category":"Sitcom & comedy catchphrases","sourceURL":"https://www.youtube.com/watch?v=L_PWbnHABsM","title":"Friends couch scene | Still Watching Netflix","checked":"2026-10-12"},{"phrase":"That's what she said.","category":"Sitcom & comedy catchphrases","sourceURL":"https://knowyourmeme.com/memes/thats-what-she-said","title":"That's What She Said | Know Your Meme","checked":"2026-10-12"},{"phrase":"Treat yo' self.","category":"Sitcom & comedy catchphrases","sourceURL":"https://time.com/5286063/retta-treat-yo-self-stop/","title":"Why Retta Wants Everyone to Stop Telling Her to 'Treat Yo' Self'","checked":"2026-10-12"},{"phrase":"As if!","category":"Movie catchphrases","sourceURL":"https://www.teenvogue.com/story/clueless-as-if-amy-heckerling","title":"Clueless director explains Cher's catchphrase","checked":"2026-10-12"},{"phrase":"On Wednesdays we wear pink.","category":"Movie catchphrases","sourceURL":"https://knowyourmeme.com/memes/on-wednesdays-we-wear-pink","title":"On Wednesdays We Wear Pink | Know Your Meme","checked":"2026-10-12"},{"phrase":"You can't sit with us.","category":"Movie catchphrases","sourceURL":"https://imgflip.com/meme/45199262/You-cant-sit-with-us","title":"You can't sit with us Memes - Imgflip","checked":"2026-10-12"},{"phrase":"That's so fetch.","category":"Movie catchphrases","sourceURL":"https://www.slangora.com/word/thats-so-fetch","title":"that's so fetch · Slangora","checked":"2026-10-12"},{"phrase":"Get in, loser. We're going shopping.","category":"Movie catchphrases","sourceURL":"https://meme.com/memes/get-in-loser-were-going-shopping","title":"Get In Loser We're Going Shopping: Meme Origin & Spread","checked":"2026-10-12"},{"phrase":"You go, Glen Coco!","category":"Movie catchphrases","sourceURL":"https://knowyourmeme.com/memes/subcultures/mean-girls","title":"Mean Girls | Know Your Meme","checked":"2026-10-12"},{"phrase":"Bazinga!","category":"Sitcom & comedy catchphrases","sourceURL":"https://knowyourmeme.com/memes/bazinga","title":"Bazinga | Know Your Meme","checked":"2026-10-12"},{"phrase":"Did I do that?","category":"Sitcom & comedy catchphrases","sourceURL":"https://en.wikipedia.org/wiki/List_of_catchphrases_in_American_and_British_mass_media","title":"List of catchphrases in American and British mass media","checked":"2026-10-12"},{"phrase":"D'oh!","category":"Sitcom & comedy catchphrases","sourceURL":"https://en.wikipedia.org/wiki/D%27oh%21","title":"D'oh!","checked":"2026-10-12"},{"phrase":"Eat my shorts!","category":"Sitcom & comedy catchphrases","sourceURL":"https://en.wiktionary.org/wiki/eat_my_shorts","title":"eat my shorts - Wiktionary, the free dictionary","checked":"2026-10-12"},{"phrase":"How rude!","category":"Sitcom & comedy catchphrases","sourceURL":"https://journals.sagepub.com/doi/pdf/10.1177/09639470221090371","title":"The evolution of swearing in television catchphrases","checked":"2026-10-12"},{"phrase":"Have mercy!","category":"Sitcom & comedy catchphrases","sourceURL":"https://www.eonline.com/news/757244/have-mercy-john-stamos-reveals-the-inspiration-behind-the-catchphrase-of-the-90s","title":"John Stamos Reveals the Inspiration Behind \"Have Mercy!\"","checked":"2026-10-12"},{"phrase":"Suit up!","category":"Sitcom & comedy catchphrases","sourceURL":"https://en.wikipedia.org/wiki/Barney_Stinson","title":"Barney Stinson","checked":"2026-10-12"},{"phrase":"You shall not pass!","category":"Movie catchphrases","sourceURL":"https://meme.com/memes/you-shall-not-pass","title":"You Shall Not Pass: Gandalf Meme Origin Explained","checked":"2026-10-12"},{"phrase":"May the Force be with you.","category":"Movie catchphrases","sourceURL":"https://starwars.fandom.com/wiki/May_the_Force_be_with_you/Legends","title":"May the Force be with you | Wookieepedia | Fandom","checked":"2026-10-12"},{"phrase":"I'll be back.","category":"Movie catchphrases","sourceURL":"https://en.wikipedia.org/wiki/I%27ll_be_back","title":"I'll be back","checked":"2026-10-12"},{"phrase":"Hasta la vista, baby.","category":"Movie catchphrases","sourceURL":"https://en.wikipedia.org/wiki/Hasta_la_vista%2C_baby","title":"Hasta la vista, baby","checked":"2026-10-12"},{"phrase":"Houston, we have a problem.","category":"Movie catchphrases","sourceURL":"https://en.wikipedia.org/wiki/Houston%2C_we_have_a_problem","title":"Houston, we have a problem","checked":"2026-10-12"},{"phrase":"To infinity and beyond!","category":"Movie catchphrases","sourceURL":"https://www.cartoonbrew.com/feature-film/lightyear-cut-scene-infinity-and-beyond-219276.html","title":"'To Infinity And Beyond' Origin Unveiled In Cut 'Lightyear' Scene","checked":"2026-10-12"},{"phrase":"Alright, alright, alright.","category":"Movie catchphrases","sourceURL":"https://www.the-independent.com/arts-entertainment/films/news/matthew-mcconaughey-reveals-origin-of-alright-alright-alright-catchphrase-from-dazed-and-confused-on-snl-a6743936.html","title":"Matthew McConaughey reveals origin of 'Alright, Alright, Alright' catchphrase from Dazed and Confused on SNL | The Independent | The Independent","checked":"2026-10-12"},{"phrase":"I'm the king of the world!","category":"Movie catchphrases","sourceURL":"https://en.wikipedia.org/wiki/King_of_the_World","title":"King of the World","checked":"2026-10-12"},{"phrase":"I am the one who knocks.","category":"Movie catchphrases","sourceURL":"https://meme.com/memes/i-am-the-one-who-knocks","title":"I Am The One Who Knocks: Breaking Bad Meme Explained","checked":"2026-10-12"},{"phrase":"Why so serious?","category":"Movie catchphrases","sourceURL":"https://knowyourmeme.com/memes/why-so-serious","title":"Why So Serious? | Know Your Meme","checked":"2026-10-12"},{"phrase":"Wakanda forever!","category":"Movie catchphrases","sourceURL":"https://knowyourmeme.com/memes/wakanda-forever/","title":"Wakanda Forever | Know Your Meme","checked":"2026-10-12"},{"phrase":"With great power comes great responsibility.","category":"Movie catchphrases","sourceURL":"https://en.wikipedia.org/wiki/With_great_power_comes_great_responsibility","title":"With great power comes great responsibility","checked":"2026-10-12"},{"phrase":"Just keep swimming.","category":"Movie catchphrases","sourceURL":"https://www.promegaconnections.com/just-keep-swimming/","title":"Just Keep Swimming: How the Wisdom of a Blue Cartoon Fish Can Inspire Us Amid COVID-19 - Promega Connections","checked":"2026-10-12"},{"phrase":"Get out of my swamp!","category":"Movie catchphrases","sourceURL":"https://digitalcultures.net/memes/get-out-of-my-swamp/","title":"Get Out of My Swamp – Meaning, Origin, Usage","checked":"2026-10-12"},{"phrase":"Life is like a box of chocolates.","category":"Movie catchphrases","sourceURL":"https://en.wiktionary.org/wiki/life_is_like_a_box_of_chocolates","title":"life is like a box of chocolates - Wiktionary, the free dictionary","checked":"2026-10-12"},{"phrase":"E.T. phone home.","category":"Movie catchphrases","sourceURL":"https://www.alternatememories.com/historical-events/movies/et-phone-home","title":"ET Phone Home","checked":"2026-10-12"},{"phrase":"You talking to me?","category":"Movie catchphrases","sourceURL":"https://www.documentarytube.com/blog/was-robert-de-niros-you-talking-to-me-line-improvised/","title":"Was “You Talking to Me?” Improvised in Taxi Driver?","checked":"2026-10-12"},{"phrase":"Here's Johnny!","category":"Movie catchphrases","sourceURL":"https://knowyourmeme.com/memes/heres-johnny","title":"Here's Johnny | Know Your Meme","checked":"2026-10-12"},{"phrase":"Press F to pay respects.","category":"Gaming & classic internet memes","sourceURL":"https://en.wikipedia.org/wiki/Press_F_to_pay_respects","title":"Press F to pay respects","checked":"2026-10-12"},{"phrase":"Get over here!","category":"Gaming & classic internet memes","sourceURL":"https://en.wikipedia.org/wiki/Scorpion_%28Mortal_Kombat%29","title":"Scorpion (Mortal Kombat)","checked":"2026-10-12"},{"phrase":"Do a barrel roll!","category":"Gaming & classic internet memes","sourceURL":"https://meme.com/memes/do-a-barrel-roll","title":"Do A Barrel Roll Meme: Origin, Meaning & Examples | meme.com","checked":"2026-10-12"},{"phrase":"The cake is a lie.","category":"Gaming & classic internet memes","sourceURL":"https://knowyourmeme.com/sensitive/memes/the-cake-is-a-lie","title":"The Cake Is a Lie | Know Your Meme","checked":"2026-10-12"},{"phrase":"It's dangerous to go alone! Take this.","category":"Gaming & classic internet memes","sourceURL":"https://knowyourmeme.com/memes/its-dangerous-to-go-alone-take-this","title":"It's Dangerous to Go Alone! Take This | Know Your Meme","checked":"2026-10-12"},{"phrase":"It's-a me, Mario!","category":"Gaming & classic internet memes","sourceURL":"https://www.reddit.com/r/Mario/comments/1kul4gi","title":"Why are none of these \"It's-a-me, Mario\" or \"Let's-a-go\"?","checked":"2026-10-12"},{"phrase":"This is fine.","category":"Gaming & classic internet memes","sourceURL":"https://trending.knowyourmeme.com/editorials/guides/who-created-the-this-is-fine-meme-and-how-did-it-become-so-popular-the-history-behind-the-iconic-webcomic-explained","title":"Who Created The 'This Is Fine' Meme, And How Did It Become So Popular? The Histo... | Know Your Meme","checked":"2026-10-12"},{"phrase":"One does not simply walk into Mordor.","category":"Gaming & classic internet memes","sourceURL":"https://knowyourmeme.com/memes/one-does-not-simply-walk-into-mordor","title":"One Does Not Simply Walk Into Mordor | Know Your Meme","checked":"2026-10-12"},{"phrase":"Ain't much, but it's honest work.","category":"Gaming & classic internet memes","sourceURL":"https://en.wikipedia.org/wiki/David_Brandt_%28farmer%29","title":"David Brandt (farmer)","checked":"2026-10-12"},{"phrase":"Shut up and take my money!","category":"Gaming & classic internet memes","sourceURL":"https://www.dictionary.com/e/memes/shut-up-and-take-my-money/","title":"Shut up and take my money! | Memes | Dictionary.com","checked":"2026-10-12"},{"phrase":"But did you die?","category":"Movie catchphrases","sourceURL":"https://knowyourmeme.com/memes/but-did-you-die","title":"But Did You Die? | Know Your Meme","checked":"2026-10-12"},{"phrase":"Oh no, baby! What is you doin?","category":"TikTok & internet reactions","sourceURL":"https://knowyourmeme.com/memes/oh-no-baby-what-is-you-doin","title":"Oh No Baby! What Is You Doin? | Know Your Meme","checked":"2026-10-12"},{"phrase":"Cash me outside, how bout dah?","category":"Reality TV, shade & viral reactions","sourceURL":"https://medium.com/%40Prasiddhakc/cash-me-outside-how-bout-dah-the-origin-of-the-meme-54d284c0b8ea","title":"“Cash Me Outside, How Bout Dah?” the origin of the meme. | by Prasiddha Kc | Medium","checked":"2026-10-12"},{"phrase":"Can I pet that dog?","category":"Vine & throwback viral clips","sourceURL":"https://puppadogs.com/can-i-pet-that-dog/","title":"What is the ‘Can I Pet That Dog’ meme? - puppadogs.com","checked":"2026-10-12"},{"phrase":"Oh, hi, Mark.","category":"Movie catchphrases","sourceURL":"https://knowyourmeme.com/memes/subcultures/the-room","title":"The Room | Know Your Meme","checked":"2026-10-12"},{"phrase":"I'm not a cat.","category":"Vine & throwback viral clips","sourceURL":"https://knowyourmeme.com/memes/zoom-cat-lawyer-im-not-a-cat","title":"Zoom Cat Lawyer | Know Your Meme","checked":"2026-10-12"},{"phrase":"This is private property.","category":"Vine & throwback viral clips","sourceURL":"https://knowyourmeme.com/memes/lock-em-up","title":"Lock 'Em Up / property confrontation | Know Your Meme","checked":"2026-10-12"},{"phrase":"I just a baby.","category":"Vine & throwback viral clips","checked":"2026-10-12","sourceURL":"https://knowyourmeme.com/memes/i-just-a-baby","title":"I Just A Baby | Know Your Meme"},{"phrase":"Merry Chrysler.","category":"Vine & throwback viral clips","checked":"2026-10-12","sourceURL":"https://knowyourmeme.com/memes/merry-chrysler","title":"Merry Chrysler | Know Your Meme"},{"phrase":"Are you not embarrassed?","category":"TikTok & creator catchphrases","checked":"2026-10-12","sourceURL":"https://knowyourmeme.com/memes/are-you-not-ashamed-of-yourself-are-you-not-embarrassed","title":"Nella Rose reaction | Know Your Meme"},{"phrase":"Look at me. I'm the captain now.","category":"Movie catchphrases","checked":"2026-10-12","sourceURL":"https://knowyourmeme.com/memes/look-at-me-im-the-captain-now","title":"Captain Phillips | Know Your Meme"},{"phrase":"What's up, brother?","sourceURL":"https://knowyourmeme.com/memes/sketch-whats-up-brother","title":"Sketch catchphrase","category":"TikTok & creator catchphrases","checked":"2026-10-12"},{"phrase":"We're Costco guys.","sourceURL":"https://trending.knowyourmeme.com/editorials/guides/what-is-the-were-costco-guys-video-the-viral-father-son-tiktok-video-explained","title":"Costco Guys spoken clip","category":"TikTok & creator catchphrases","checked":"2026-10-12"},{"phrase":"Double chunk chocolate cookie.","sourceURL":"https://knowyourmeme.com/editorials/meme-review/kym-review-the-top-viral-videos-of-2024","title":"Costco Guys spoken clip","category":"TikTok & creator catchphrases","checked":"2026-10-12"},{"phrase":"Put it in reverse, Terry!","sourceURL":"https://knowyourmeme.com/memes/back-up-terry-put-it-in-reverse-terry","title":"Back Up Terry viral clip","category":"Vine & throwback viral clips","checked":"2026-10-12"},{"phrase":"What the dog doin'?","sourceURL":"https://knowyourmeme.com/memes/what-the-dog-doin","title":"What the Dog Doin' viral clip","category":"Vine & throwback viral clips","checked":"2026-10-12"},{"phrase":"Just put my fries in the bag, bro.","sourceURL":"https://knowyourmeme.com/memes/just-put-my-fries-in-the-bag-bro","title":"Just Put My Fries in the Bag Bro","category":"TikTok & internet reactions","checked":"2026-10-12"},{"phrase":"I like my cheese drippy, bruh.","sourceURL":"https://knowyourmeme.com/memes/i-like-my-cheese-drippy-bruh","title":"Logan Paul / Lunchly spoken clip","category":"TikTok & creator catchphrases","checked":"2026-10-12"},{"phrase":"Standing on business.","sourceURL":"https://knowyourmeme.com/memes/standing-on-business/","title":"Documented internet catchphrase","category":"TikTok & internet reactions","checked":"2026-10-12"},{"phrase":"My name is Jeff.","sourceURL":"https://knowyourmeme.com/memes/my-name-is-jeff","title":"22 Jump Street","category":"Movie catchphrases","checked":"2026-10-12"},{"phrase":"That escalated quickly.","sourceURL":"https://knowyourmeme.com/memes/that-escalated-quickly","title":"Anchorman reaction","category":"Movie catchphrases","checked":"2026-10-12"},{"phrase":"How do you do, fellow kids?","sourceURL":"https://trending.knowyourmeme.com/editorials/guides/where-does-the-how-do-you-do-fellow-kids-meme-come-from-the-classic-steve-buscemi-meme-explained","title":"30 Rock","category":"Sitcom & comedy catchphrases","checked":"2026-10-12"},{"phrase":"Are you not ashamed of yourself?","sourceURL":"https://knowyourmeme.com/memes/are-you-not-ashamed-of-yourself-are-you-not-embarrassed","title":"Nella Rose reaction","category":"TikTok & creator catchphrases","checked":"2026-10-12"},{"phrase":"Lock 'em up!","sourceURL":"https://knowyourmeme.com/memes/lock-em-up","title":"Property confrontation viral clip","category":"Vine & throwback viral clips","checked":"2026-10-12"}];
+const STARTERS=CATCHPHRASES.map(entry=>entry.phrase);
+Object.assign(STYLES,{"Chibi":"Cute chibi character with a large head, compact body and expressive face.","Anime-inspired":"Original anime-inspired illustration with expressive features and confident cel shading.","Manga ink":"Black-and-white manga-inspired linework with clean screentone shading.","Kawaii":"Kawaii illustration with rounded forms, cheerful details and a soft palette.","Paper cutout":"Layered paper-cut illustration with crisp cut edges and subtle dimensional shadows.","Collage-inspired":"Cohesive mixed-media cut-paper aesthetic for one individual design, not a multi-image collage.","Oil painting":"Painterly oil-paint texture with rich color and readable shapes.","Gouache":"Opaque gouache illustration with velvety color fields and hand-painted edges.","Pencil sketch":"Detailed pencil drawing with confident outlines and controlled shading.","Ink engraving":"Vintage engraved linework, fine hatching and monochrome contrast.","Linocut":"Bold linocut-inspired shapes, carved edges and strong limited-color contrast.","Airbrush":"Smooth airbrush gradients, dramatic highlights and a polished illustrated finish.","Y2K chrome":"Reflective chrome accents, glossy Y2K styling and bold readable forms.","Pixel art":"Crisp pixel-art illustration using deliberate square pixels and a restricted palette.","Neon sign":"Luminous neon-tube-inspired shapes with controlled glow and strong readability.","Plush toy":"Soft plush-toy texture, stitched details and cuddly rounded forms.","Crochet-inspired":"Tactile crochet-inspired yarn loops and sculpted forms; artwork, not a crochet pattern.","Felt applique":"Layered felt-applique-inspired textures and stitched edges; concept artwork.","Stained glass":"Stained-glass-inspired shapes separated by dark leading and vivid translucent colors.","Woodcut":"Traditional woodcut-inspired linework with carved textures and strong silhouettes."});
+const DEFAULT={
+saying:"",character:"Dog",customCharacter:"",scene:"",pose:"",expression:"",angle:"",background:"",
+keepPose:true,keepComposition:true,keepAngle:true,keepBackground:true,product:"T-shirt",layout:"Centered front",
+placement:"Large centered print",customPlacement:"",proportions:"3:4 portrait",transparent:true,styles:["Cartoon"],
+font:"Bold display lettering",textPlacement:"Above and below the character",textSize:"Large and prominent",
+palette:"Black, white, coral and teal",outline:"Contrasting outline",shadow:"No shadow",curve:false,stacked:false,
+decor:"None",reference:"",referenceName:"",
+characterPreset:"",characterDetails:"",outfit:"No outfit / natural character",accessory:"None",sourceURL:"",sourceNote:""
+};
+function buildPrompts(s){
+if(!s.saying.trim())throw Error("Choose or enter a saying first.");
+if(!s.styles.length)throw Error("Select at least one design style.");
+if(s.placement==="Custom placement"&&!s.customPlacement?.trim())throw Error("Describe your custom print placement first.");
+if((s.character==="Custom character"&&!s.customCharacter.trim())||(!["Dog","Cat"].includes(s.character)&&!s.customCharacter.trim()&&!s.characterPreset))throw Error("Describe your custom character first.");
+if(!s.palette.trim())throw Error("Enter your custom colors or choose a palette preset.");
+if(!s.scene.trim()&&!s.pose.trim())throw Error("Choose a scene pack or describe the scene or pose.");
+const character=s.customCharacter.trim()||s.characterPreset||s.character;
+const catchphrase=CATCHPHRASES.find(entry=>entry.phrase===s.saying);
+const characterStyling=[s.characterDetails,s.outfit==="No outfit / natural character"?"":s.outfit,s.accessory==="None"?"":s.accessory].filter(Boolean).join("; ");
+const detail=(label,value)=>value.trim()?label+": "+value+(/[.!?]$/.test(value.trim())?"":"."):"";
+const locks=[
+s.keepPose?"Preserve the described pose and body placement.":"Adapt the pose naturally for the replacement character.",
+s.keepComposition?"Preserve the original composition, subject position and framing.":"Arrange the composition for the selected merchandise layout.",
+s.keepAngle?"Preserve the original camera angle and perspective.":"Choose a clear camera angle appropriate for the product.",
+s.keepBackground?(s.transparent?"Retain essential scene objects and spatial relationships inside an isolated vignette; remove the outer background.":"Preserve the original scene and background."):(s.transparent?"Use an isolated subject with only necessary scene props.":"Create a complementary background.")
+].join(" ");
+const otherProducts={"Hoodie":"Flat hoodie print artwork; keep the design clear of the pocket and seams.","Sweatshirt":"Flat sweatshirt print artwork with clear front placement and generous safe margins.","Mug":"Horizontal mug-wrap artwork with safe space at the handle and readable text.","Sticker":"A die-cut sticker design with a clean cut silhouette and a safe border.","Poster":"A poster composition with readable hierarchy and trim-safe margins.","Phone case":"Phone-case artwork with a camera-cutout safe zone and edge-safe text.","Pillow":"A square pillow print composition with seam-safe margins.","Notebook":"A notebook-cover design with binding-safe and trim-safe margins."};
+const product=otherProducts[s.product]|| (s.product==="Tumbler"?
+(s.layout==="Full wrap"?"Create a horizontal tumbler-wrap artwork. Leave safe margins at both seam edges; keep the saying away from the seam.":"Create a front-facing tumbler panel with a compact focal design."):
+s.product==="Tote bag"?"Create flat tote-bag print artwork, with safe margins and a strong readable central design.":"Create flat T-shirt print artwork, with a bold silhouette and safe margins.");
+return s.styles.map(style=>({style,text:[
+APP_NAME.toUpperCase()+" — "+style+" / "+s.product,
+"Create merchandise artwork inspired by a spoken TikTok saying, not music. This prompt does not establish that the saying is currently trending.",
+"EXACT SAYING (copy the contents between the delimiters verbatim):\n<<<"+s.saying+">>>",
+"Replace the original person or character with "+character+". "+(characterStyling?"Character details: "+characterStyling+". ":"")+"Preserve recognizable character features and believable anatomy. When depicting a plus-size character, preserve accurate plus-size proportions.",
+"Use the following written scene description as the visual guide.",
+[detail("Original scene",s.scene),detail("Original pose",s.pose),detail("Expression",s.expression),detail("Camera angle",s.angle),detail("Original background",s.background)].filter(Boolean).join(" "),
+locks,
+"ART STYLE: "+STYLES[style],
+catchphrase?"CATCHPHRASE REFERENCE: "+catchphrase.title+". "+catchphrase.sourceURL+". This documents the saying, not a current trend ranking; do not copy the source character or logo.":"",
+s.sourceURL?"SOURCE NOTE: "+s.sourceURL+" "+(s.sourceNote||"")+". A source link is for your reference; the image generator may not read it.":"",
+"PRODUCT & LAYOUT: "+product+" Placement: "+(s.placement==="Custom placement"?(s.customPlacement||"custom placement specified by the user"):s.placement)+". Layout: "+s.layout+". Canvas proportions: "+s.proportions+". Match the supplier's actual print template before production.",
+"TYPOGRAPHY: "+s.font+". Position: "+s.textPlacement+". Size: "+s.textSize+". Palette: "+s.palette+". Outline: "+s.outline+". Shadow: "+s.shadow+". "+(s.curve?"Use curved lettering. ":"")+(s.stacked?"Stack the saying into intentional readable lines. ":"")+"Decorative effects: "+s.decor+".",
+s.transparent?"BACKGROUND: True transparent outer background, no checkerboard baked into the artwork, no opaque rectangular backdrop. Preserve necessary scene props within the vignette.":"BACKGROUND: Finished background that follows the scene controls.",
+"Render the exact saying with correct spelling, punctuation and capitalization. Do not paraphrase, add extra words, logos, watermarks or mockup products. Keep typography separate from faces and readable at merchandise size. Check generated text and print dimensions before production."
+].filter(Boolean).join("\n\n")}));
+}
+function validateBackup(b){
+if(!b||b.app!=="flip-the-script-tiktok"||b.version!==1||!b.settings||!Array.isArray(b.sayings)||!Array.isArray(b.favorites))throw Error("Choose a Flip the Catchphrase Studio backup exported by this tool (older Flip the Script backups also work).");
+const clean=s=>{
+if(!s||typeof s!=="object")throw Error("Invalid saved settings.");
+const result={...DEFAULT};
+for(const k of Object.keys(DEFAULT)){
+if(k==="styles"){if(!Array.isArray(s[k]))throw Error("Invalid style selection.");result[k]=s[k].filter(x=>Object.hasOwn(STYLES,x));}
+else if(typeof DEFAULT[k]==="boolean"){if(typeof s[k]==="boolean")result[k]=s[k];}
+else if(typeof s[k]==="string"){if(s[k].length>(k==="reference"?2400000:10000))throw Error("Backup field is too large.");result[k]=s[k];}
+}
+if(result.reference&&!/^data:image\/(png|jpeg|webp|gif|avif);base64,[A-Za-z0-9+/=]+$/.test(result.reference))throw Error("Unsupported backup image.");
+if(!["Dog","Cat","Other animal","Fictional character","Person","Food character","Object character","Custom character"].includes(result.character))result.character="Custom character";
+if(!["T-shirt","Tote bag","Tumbler","Hoodie","Sweatshirt","Mug","Sticker","Poster","Phone case","Pillow","Notebook"].includes(result.product))result.product="T-shirt";
+return result;
+};
+if(b.sayings.length>500||b.favorites.length>100)throw Error("Backup exceeds 500 sayings or 100 favorites.");
+return {settings:clean(b.settings),sayings:[...new Set(b.sayings.filter(x=>typeof x==="string"&&x.trim()&&x.length<=10000))],favorites:b.favorites.map(f=>{
+if(typeof f.name!=="string"||f.name.length>10000)throw Error("Invalid favorite.");
+return {id:typeof f.id==="string"?f.id:Math.random().toString(36),name:f.name,settings:clean(f.settings)};
+})};
+}
+
+const $=id=>document.getElementById(id);
+let state={...DEFAULT,styles:[...DEFAULT.styles]},sayings=[],favorites=[],outputs=[],storageAvailable=true;
+const KEY="flip-the-script-tiktok-v1";
+function notice(text,error=false){if(!storageAvailable&&!error){text+=" Browser saving is unavailable; export or copy a backup before closing.";error=true;}$("notice").textContent=text;$("notice").classList.toggle("error",error);}
+function backup(){return {app:"flip-the-script-tiktok",version:1,settings:state,sayings,favorites};}
+try{const saved=localStorage.getItem(KEY);if(saved){const data=validateBackup(JSON.parse(saved));state=data.settings;sayings=data.sayings;favorites=data.favorites;}}catch(e){storageAvailable=false;}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(backup()));storageAvailable=true;$("saveState").textContent="Saved in this browser";}catch(e){storageAvailable=false;$("saveState").textContent="Browser saving unavailable — export a backup";}}
+function el(tag,text,className){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n;}
+function choices(values){return values.map(value=>({value,label:value}));}
+function field(parent,id,label,values,type="text"){
+const wrap=el("label",undefined,"field");wrap.append(el("span",label));
+const input=document.createElement(type==="textarea"?"textarea":values?"select":"input");
+input.id=id;input.dataset.field=id;
+if(values)for(const value of choices(values)){const option=el("option",value.label);option.value=value.value;input.append(option);}
+else if(type!=="textarea")input.type=type;
+if(type==="textarea")input.rows=2;
+if(!values)input.maxLength=10000;
+wrap.append(input);parent.append(wrap);return input;
+}
+function group(parent,title){parent.append(el("h3",title));const grid=el("div",undefined,"fields");parent.append(grid);return grid;}
+const sceneGrid=group($("sceneFields"),"Describe the original");
+field(sceneGrid,"scene","Original scene",null,"textarea");
+field(sceneGrid,"pose","Original pose",null,"textarea");
+field(sceneGrid,"expression","Expression");
+field(sceneGrid,"angle","Camera angle");
+field(sceneGrid,"background","Original background",null,"textarea");
+const charGrid=group($("sceneFields"),"Swap the character");
+field(charGrid,"character","Replacement",["Dog","Cat","Other animal","Fictional character","Person","Food character","Object character","Custom character"]);
+field(charGrid,"customCharacter","Custom character / animal details");
+const locks=el("div",undefined,"checks");
+for(const [id,label]of [["keepPose","Keep pose"],["keepComposition","Keep composition"],["keepAngle","Keep camera angle"],["keepBackground","Keep background / scene props"]]){
+const l=el("label");const i=document.createElement("input");i.type="checkbox";i.id=id;i.dataset.field=id;l.append(i,document.createTextNode(label));locks.append(l);
+}$("sceneFields").append(locks);
+const productGrid=group($("productFields"),"Choose the canvas");
+field(productGrid,"product","Product",["T-shirt","Tote bag","Tumbler","Hoodie","Sweatshirt","Mug","Sticker","Poster","Phone case","Pillow","Notebook"]);
+field(productGrid,"layout","Layout",["Centered front","Full wrap","Front panel","Front and back","Large back print","Pocket print","Badge / emblem","Round sticker","Die-cut silhouette","Repeat pattern","Vertical poster","Square composition"]);
+field(productGrid,"placement","Print placement",["Large centered print","Small chest print","Full front print","Centered bag panel","Edge-to-edge wrap","Large back print","Sleeve print","Upper-corner accent","Centered cover","All-over pattern","Bottom-corner accent","Custom placement"]);
+field(productGrid,"proportions","Canvas proportions",["3:4 portrait","1:1 square","4:3 landscape","3:1 horizontal wrap","2:3 portrait","4:5 portrait","9:16 vertical","16:9 landscape","2:1 wrap","Use supplier template"]);
+const transparent=el("label",undefined,"checkline");const ti=document.createElement("input");ti.id="transparent";ti.dataset.field="transparent";ti.type="checkbox";transparent.append(ti,document.createTextNode("Transparent outer background"));$("productFields").append(transparent);
+for(const [name,description]of Object.entries(STYLES)){
+const label=el("label",undefined,"style");const input=document.createElement("input");input.type="checkbox";input.value=name;input.name="artStyle";label.append(input,el("span",name));label.title=description;$("styles").append(label);
+}
+const typeGrid=group($("typeFields"),"Make the words pop");
+field(typeGrid,"font","Font style",["Bold display lettering","Rounded playful lettering","Condensed poster lettering","Retro serif lettering","Handwritten brush lettering","Graffiti lettering","Clean sans serif lettering","Groovy 1970s lettering","Western slab serif","Varsity block lettering","Chunky bubble lettering","Comic sound-effect lettering","Elegant script","Typewriter lettering","Gothic blackletter","Art Deco lettering","Disco lettering","Stencil lettering","Puffy dimensional lettering","Chalkboard lettering","Minimal editorial serif","Pixel lettering","Ribbon lettering","Hand-cut paper lettering"]);
+field(typeGrid,"textPlacement","Text placement",["Above and below the character","Above the character","Below the character","Behind the character, fully readable","Surrounding the character","On a ribbon banner","Inside a speech bubble","Stacked at the center","Arched around the character","Aligned to the left","Aligned to the right","Split across top and bottom","In a badge / emblem"]);
+field(typeGrid,"textSize","Text size",["Large and prominent","Balanced with the character","Oversized headline"]);
+field(typeGrid,"palette","Color palette / custom colors");
+field(typeGrid,"outline","Outline",["Contrasting outline","Double outline","No outline","Thin black outline","Thick black outline","White sticker outline","Color-block outline","Gold-inspired outline","Neon outline","Triple outline"]);
+field(typeGrid,"shadow","Shadow",["No shadow","Soft drop shadow","Hard offset shadow","3D extrusion","Long retro shadow","Neon glow","Chromatic offset","Soft halo"]);
+field(typeGrid,"decor","Decorative effects",["None","Halftone accents","Distressed texture","Sparkles","Comic bursts","Paint splashes","Chrome highlights","Glitter-inspired texture","Foil-inspired texture","Neon glow","Floral accents","Stars","Hearts","Lightning bolts","Retro sun rays","Checkered accents","Polka dots","Checkerboard border","Scalloped border","Rope border","Cloud shapes","Sticker border","Ink splatter","Stitch-inspired border","Rhinestone-inspired accents","Worn screen-print texture"]);
+for(const[id,label]of [["curve","Curve the lettering"],["stacked","Stack the lettering"]]){
+const l=el("label",undefined,"checkline");const i=document.createElement("input");i.id=id;i.dataset.field=id;i.type="checkbox";l.append(i,document.createTextNode(label));$("typeFields").append(l);
+}
+function updateSayings(){
+$("sayings").replaceChildren();
+for(const text of [...new Set([...STARTERS,...Object.values(OPTIONS.sayings).flat(),...sayings])]){const option=document.createElement("option");option.value=text;$("sayings").append(option);}
+$("libraryCount").textContent=sayings.length+" saved sayings";
+}
+function updateQuote(){$("quote").textContent=state.saying||"Your saying goes here.";renderPhraseEvidence();}
+function renderState(){
+updateCharacterOptions();
+for(const input of document.querySelectorAll("[data-field]")){
+const value=state[input.dataset.field];if(input.type==="checkbox")input.checked=value;else input.value=value;
+}
+for(const input of document.querySelectorAll('[name="artStyle"]'))input.checked=state.styles.includes(input.value);
+$("customCharacter").disabled=false;
+updateQuote();updateSayings();syncPresets();if(typeof placementLabel!=="undefined")syncCustomFields();
+}
+
+function buildBatchPrompt(items){
+if(!items.length)throw Error("Generate prompts first.");
+const n=items.length;
+return [
+"CREATE "+n+" SEPARATE IMAGES ON "+n+" INDIVIDUAL CANVASES",
+"Use the "+n+" numbered design prompts below to create the complete set. Create exactly ONE image per prompt, in the listed order. Each image must be a separate, independently downloadable output on its own individual canvas.",
+"Do NOT combine the designs into a collage, grid, contact sheet, split-screen, multi-panel image, mockup sheet or shared canvas. Do NOT put several designs inside one image. Do NOT return one combined image instead of the separate outputs.",
+"VARIETY: Make each selected art style visibly distinct. Follow the character, scene, merchandise layout, typography, exact saying and background instructions for that specific prompt. Do not blend the art styles together. Preserve every specified pose, composition and camera lock. Vary the rendering naturally within each style without changing the exact saying or overriding those locks.",
+"OUTPUT: Label the outputs Canvas 01 through Canvas "+String(n).padStart(2,"0")+". Deliver "+n+" separate images. Keep canvas labels outside the artwork. Do not add unrequested text or combine the canvases.",
+"Generate the full set in this request if your image tool supports it. If you cannot produce all "+n+" separate images in one request, explain the output limit and produce supported batches with separate canvases; never replace them with a collage.",
+...items.map((item,index)=>"===== CANVAS "+String(index+1).padStart(2,"0")+" OF "+n+" / "+item.style+" =====\n"+item.text)
+].join("\n\n");
+}
+
+function invalidate(){outputs=[];$("results").replaceChildren();$("empty").hidden=false;$("resultCount").textContent="Ready when you are";$("copyAll").disabled=true;$("copyBatch").disabled=true;$("batchText").value="";$("batchDetails").hidden=true;$("saveFavorite").disabled=true;}
+function renderResults(){
+$("results").replaceChildren();$("empty").hidden=outputs.length>0;
+$("resultCount").textContent=outputs.length+" separate prompt"+(outputs.length===1?"":"s");
+$("copyAll").disabled=!outputs.length;$("copyBatch").disabled=!outputs.length;$("batchDetails").hidden=!outputs.length;$("batchText").value=outputs.length?buildBatchPrompt(outputs):"";$("saveFavorite").disabled=!outputs.length;
+outputs.forEach((output,index)=>{
+const card=el("article",undefined,"prompt");const header=el("div",undefined,"prompthead");
+header.append(el("h3",String(index+1).padStart(2,"0")+" / "+output.style));
+const copy=el("button","Copy prompt","small");copy.type="button";copy.setAttribute("aria-label","Copy "+output.style+" prompt");copy.addEventListener("click",()=>copyText(output.text));header.append(copy);
+const body=el("textarea");body.readOnly=true;body.value=output.text;body.setAttribute("aria-label",output.style+" prompt");body.rows=15;
+card.append(header,body);$("results").append(card);
+});
+}
+function generate(){try{outputs=buildPrompts(state);renderResults();showTab("prompts");notice("Your separate prompts are ready to copy.");}catch(e){showMissingStep();notice(e.message,true);}}
+function showManualCopy(text){
+let dialog=$('manualCopyDialog');if(!dialog){dialog=el('dialog',undefined,'helpDialog');dialog.id='manualCopyDialog';dialog.setAttribute('aria-labelledby','manualCopyTitle');const title=el('h2','Copy your text');title.id='manualCopyTitle';const close=el('button','Close','small');close.type='button';close.addEventListener('click',()=>dialog.close());dialog.append(title,el('p','The text below is selected. Use Ctrl+C, Command+C, or your device’s Copy action if automatic copying is unavailable.','hint'),$('manualCopy'),close);document.body.append(dialog);}
+const area=$('manualCopy');area.hidden=false;area.value=text;if(!dialog.open)dialog.showModal();area.focus();area.select();
+}
+async function copyText(text){
+try{await navigator.clipboard.writeText(text);notice("Copied to clipboard.");}
+catch(e){const t=el("textarea");t.value=text;document.body.append(t);t.select();let ok=false;try{ok=document.execCommand("copy");}catch(e){}t.remove();
+if(ok)notice("Copied to clipboard.");else{showManualCopy(text);notice("Automatic copy is unavailable. Your text is selected below; press Ctrl+C (or Command+C).",true);}
+}}
+function renderFavorites(){
+$("favorites").replaceChildren();$("favoriteCount").textContent=favorites.length;
+if(!favorites.length)$("favorites").append(el("p","Save a finished prompt set to revisit it.","hint"));
+favorites.forEach(f=>{
+const row=el("div",undefined,"favorite");row.append(el("span",f.name));
+const load=el("button","Load","small");load.type="button";load.addEventListener("click",()=>{
+clearUndo();state=JSON.parse(JSON.stringify(f.settings));renderState();persist();generate();notice("Favorite loaded. Your saved sayings and other favorites are preserved.");
+});row.append(load);$("favorites").append(row);
+});
+}
+document.addEventListener("input",event=>{
+const input=event.target;if(!input.dataset.field&&input.name!=="artStyle")return;
+if(input.name==="artStyle")state.styles=[...document.querySelectorAll('[name="artStyle"]:checked')].map(n=>n.value);
+else state[input.dataset.field]=input.type==="checkbox"?input.checked:input.value;
+$("customCharacter").disabled=false;
+updateQuote();syncPresets();invalidate();persist();
+});
+$("product").addEventListener("change",()=>{
+if(state.product==="Tumbler"){state.layout="Full wrap";state.proportions="3:1 horizontal wrap";state.placement="Edge-to-edge wrap";}
+else if(state.product==="Mug"){state.layout="Full wrap";state.proportions="2:1 wrap";state.placement="Edge-to-edge wrap";}
+else{state.layout="Centered front";state.proportions=["Sticker","Pillow"].includes(state.product)?"1:1 square":"3:4 portrait";state.placement=state.product==="Tote bag"?"Centered bag panel":"Large centered print";}
+renderState();invalidate();persist();
+});
+$("layout").addEventListener("change",()=>{if(!["Tumbler","Mug"].includes(state.product)&&state.layout==="Full wrap")notice("Full wrap is intended for tumblers and mugs. Choose one of those or a centered layout.",true);});
+$("addSaying").addEventListener("click",()=>{
+if(!state.saying.trim())return notice("Enter a saying first.",true);
+if(sayings.includes(state.saying))return notice("This saying is already saved.");
+if(sayings.length>=500)return notice("The library is full. Export a backup before starting another library.",true);
+sayings.push(state.saying);updateSayings();renderSayingChoices();persist();notice("Saying saved with your exact wording.");
+});
+$("generate").addEventListener("click",generate);
+$("copyAll").addEventListener("click",()=>copyText(outputs.map(o=>o.text).join("\n\n"+"─".repeat(40)+"\n\n")));
+$("copyBatch").addEventListener("click",()=>{if(!outputs.length)return;const text=buildBatchPrompt(outputs);$("batchText").value=text;$("batchDetails").open=true;copyText(text);});
+$("saveFavorite").addEventListener("click",()=>{
+if(!outputs.length)return;
+if(favorites.some(f=>JSON.stringify(f.settings)===JSON.stringify(state)))return notice("This exact setup is already saved.");
+if(favorites.length>=100)return notice("You have 100 favorites. Export a backup before starting another collection.",true);
+favorites.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2),name:state.saying,settings:JSON.parse(JSON.stringify(state))});
+renderFavorites();persist();notice("Favorite saved.");
+});
+$("reset").addEventListener("click",()=>{
+clearUndo();state={...DEFAULT,styles:[...DEFAULT.styles]};renderState();invalidate();persist();showTab("sayings");notice("Form reset. Saved favorites and sayings are preserved.");
+});
+$("example").addEventListener("click",()=>{
+state={...DEFAULT,styles:["Cartoon","Comic book"],saying:"This is private property.",scene:"A person seated inside a pickup truck, seen through the open driver's window.",pose:"Seated behind the wheel, one arm resting on the open window.",expression:"Serious and assertive",angle:"Eye-level view from outside the driver's window.",background:"Truck interior, steering wheel and open window frame.",character:"Dog"};
+showTab("sayings");renderState();invalidate();persist();notice("Truck example loaded. Continue through the sections or generate your prompts.");
+});
+$("export").addEventListener("click",()=>{
+const blob=new Blob([JSON.stringify(backup(),null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="flip-the-catchphrase-studio-backup.json";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);notice("Backup download requested. Confirm the file finished downloading. If your browser blocks it, use Copy backup.");
+});
+$("import").addEventListener("change",async event=>{
+const file=event.target.files[0];if(!file)return;
+try{
+if(file.size>12000000)throw Error("Backup must be under 12 MB.");
+const data=validateBackup(JSON.parse(await file.text()));
+const nextSayings=[...new Set([...sayings,...data.sayings])];
+const nextFavorites=[...favorites];
+for(const f of data.favorites)if(!nextFavorites.some(x=>JSON.stringify(x.settings)===JSON.stringify(f.settings)))nextFavorites.push(f);
+if(nextSayings.length>500||nextFavorites.length>100)throw Error("Merged backup exceeds the collection limits; existing data was preserved.");
+clearUndo();state=data.settings;sayings=nextSayings;favorites=nextFavorites;renderState();renderFavorites();invalidate();persist();notice("Backup imported. Collections merged without duplicating identical setups.");
+}catch(e){notice("Import failed: "+e.message,true);}finally{event.target.value="";}
+});
+
+const OPTIONS={"characters":{"Dog":["Dog","Golden retriever","French bulldog","Poodle","Dachshund","Corgi","Husky","Beagle","Chihuahua","Labrador","Shih Tzu","Pit bull","Pug","Dalmatian","Boxer","Rottweiler","German shepherd","Yorkshire terrier","Basset hound","Great Dane"],"Cat":["Cat","Orange tabby","Tuxedo cat","Siamese cat","Persian cat","Maine Coon","British shorthair","Sphynx cat","Calico cat","Black cat","Ragdoll cat","Bengal cat","Scottish fold","Fluffy kitten","Grumpy senior cat"],"Other animal":["Raccoon","Fox","Bunny","Frog","Bear","Panda","Elephant","Lion","Tiger","Giraffe","Gorilla","Sloth","Capybara","Otter","Penguin","Flamingo","Owl","Parrot","Goat","Cow","Pig","Horse","Donkey","Duck","Chicken","Turtle","Lizard","Butterfly","Shark","Octopus"],"Fictional character":["Friendly robot","Space explorer","Cowgirl","Pirate captain","Mermaid","Fairy","Witch","Vampire","Superhero","Knight","Friendly ghost","Sassy skeleton","Alien","Dragon","Unicorn","Wizard","Time-traveling barista","Detective","Cyberpunk courier","Disco monster"],"Person":["Plus-size grandma","Plus-size grandpa","Plus-size woman","Plus-size man","Curvy fashion model","Petite adult","Tall adult","Older stylish woman","Older stylish man","Adult chef","Adult nurse","Adult teacher","Adult mechanic","Adult hairstylist","Adult gamer","Adult office worker","Adult dancer","Adult truck driver","Adult cowboy","Adult cowgirl"],"Food character":["Sassy strawberry","Dancing banana","Confident pineapple","Peach","Watermelon slice","Avocado","Lemon","Orange","Chili pepper","Mushroom","Potato","Corn cob","Cupcake","Donut","Taco","Pizza slice","Burger","Coffee cup","Bubble tea","Popcorn bucket"],"Object character":["Retro television","Smartphone","Laptop","Sneaker","Handbag","Lipstick tube","Perfume bottle","Flower pot","Disco ball","Alarm clock","Book","Pencil","Paintbrush","Camera","Microphone","Toaster","Vacuum cleaner","Mailbox","Traffic cone","Rubber duck"],"Custom character":["Describe your own character"]},"poses":["Seated behind a steering wheel, arm on the open window","Seated with arms crossed","Standing with hands on hips","Pointing one finger at the viewer","Leaning back with a smug grin","Side-eye over one shoulder","Shrugging with both palms up","Holding up a stop hand","Sipping from a mug","Peeking around a doorway","Looking over sunglasses","Leaning on a counter","Holding a phone at eye level","Taking a mirror selfie","Reclining on a couch","Crossing one leg over the other","Walking confidently toward camera","Turning away dramatically","Hands raised in surprise","Pinching the bridge of the nose","Covering the mouth in disbelief","Giving a thumbs-up","Pointing at a sign","Holding a shopping bag","Reading a book","Sitting on a porch chair","Dancing with one arm raised","Resting chin on one hand","Holding a microphone","Waving dismissively"],"expressions":["Serious and assertive","Smug and unbothered","Dramatic side-eye","Wide-eyed surprise","Deadpan stare","Mischievous grin","Disappointed but composed","Laughing uncontrollably","Raised eyebrow","Confident smile","Playfully offended","Fake innocence","Suspicious squint","Exhausted expression","Proud and pleased","Shocked disbelief","Trying not to laugh","Fierce determination","Sweet and cheerful","Sarcastic smirk","Curious head tilt","Confused and puzzled","Tearful laughing","Calm and elegant"],"angles":["Eye-level front view","Eye-level three-quarter view","Slightly low angle","High angle looking down","Close-up portrait","Medium waist-up shot","Full-body view","Over-the-shoulder view","Profile side view","View through an open car window","Dashboard camera view","Doorbell camera view","Mirror reflection view","Wide establishing view","Top-down flat view","Centered symmetrical framing","Dutch angle","Low-angle heroic view"],"backgrounds":["Pickup truck interior with open window","Front porch and rocking chair","Cozy living room","Modern kitchen","Grocery-store aisle","Office cubicle","Coffee-shop counter","Salon mirror and chair","Neon diner booth","Garden patio","Beach at sunset","Dusty country road","City street at night","Warehouse loading dock","School classroom","Gym floor","Laundry room","Bathroom vanity","Gaming room with LED lights","Farm barn","Flower shop","Boutique dressing room","Airport waiting area","Food-truck window","Concert stage","Halloween pumpkin patch","Haunted-house doorway","Snowy holiday street","Birthday party backdrop","Graduation stage","Plain studio backdrop","Comic speech-bubble backdrop","Retro checkerboard pattern","Soft watercolor wash","Urban brick wall"],"outfits":["No outfit / natural character","Oversized hoodie","Denim jacket","Graphic tee and jeans","Business suit","Tracksuit","Cozy cardigan","Western shirt and boots","Apron","Chef uniform","Nurse scrubs","Mechanic coveralls","Salon cape","Leather jacket","Retro windbreaker","Pajamas","Overalls","Varsity jacket","Glam sequin jacket","Flowing maxi dress","Casual summer dress","Streetwear set","Athletic outfit","Holiday sweater","Halloween costume","Work vest","Raincoat","Tropical shirt","Statement blouse","Loungewear"],"accessories":["None","Oversized sunglasses","Reading glasses","Baseball cap","Bucket hat","Western hat","Headphones","Gold hoop earrings","Pearl earrings","Bandana","Coffee mug","Phone","Shopping bag","Toolbox","Microphone","Book","Clip-on bow","Neck scarf","Backpack","Crossbody bag","Walking cane","Umbrella","Flower bouquet","Snack bag","Clipboard","Water bottle"],"palettes":["Black, white, coral and teal","Black and hot pink","Black and gold","Teal and cream","Lavender and mint","Red, white and blue","Neon pink and electric blue","Rainbow brights","Pastel rainbow","Earth tones","Sage and terracotta","Orange and black","Purple, orange and lime","Red and forest green","Icy blue and silver","Burgundy and champagne","Chocolate and caramel","Peach and cream","Monochrome black","White ink on dark fabric","Sunset orange and magenta","Ocean blue and aqua","Vintage mustard and rust","Candy pink and lilac","Royal blue and white","Emerald and gold","Custom colors"],"fonts":["Bold display lettering","Rounded playful lettering","Condensed poster lettering","Retro serif lettering","Handwritten brush lettering","Graffiti lettering","Clean sans serif lettering","Groovy 1970s lettering","Western slab serif","Varsity block lettering","Chunky bubble lettering","Comic sound-effect lettering","Elegant script","Typewriter lettering","Gothic blackletter","Art Deco lettering","Disco lettering","Stencil lettering","Puffy dimensional lettering","Chalkboard lettering","Minimal editorial serif","Pixel lettering","Ribbon lettering","Hand-cut paper lettering"],"decor":["None","Halftone accents","Distressed texture","Sparkles","Comic bursts","Paint splashes","Chrome highlights","Glitter-inspired texture","Foil-inspired texture","Neon glow","Floral accents","Stars","Hearts","Lightning bolts","Retro sun rays","Checkered accents","Polka dots","Checkerboard border","Scalloped border","Rope border","Cloud shapes","Sticker border","Ink splatter","Stitch-inspired border","Rhinestone-inspired accents","Worn screen-print texture"],"sayings":{"TikTok & creator catchphrases":["Very demure, very mindful.","Mama, a girl behind you.","It's corn!","And I oop!","Bombastic side eye.","Criminal offensive side eye.","It's a chicken salad.","Are you not embarrassed?","What's up, brother?","We're Costco guys.","Double chunk chocolate cookie.","I like my cheese drippy, bruh.","Are you not ashamed of yourself?"],"Reality TV, shade & viral reactions":["You need to leave!","Ain't nobody got time for that.","Hide yo kids, hide yo wife.","It's above me now.","Who gon' check me, boo?","I don't know her.","Kim, there's people that are dying.","You're doing amazing, sweetie.","Not today, Satan.","Sashay away.","Shantay, you stay.","Cash me outside, how bout dah?"],"Movie catchphrases":["Bye, Felicia.","Chicken jockey!","I am Steve.","As if!","On Wednesdays we wear pink.","You can't sit with us.","That's so fetch.","Get in, loser. We're going shopping.","You go, Glen Coco!","You shall not pass!","May the Force be with you.","I'll be back.","Hasta la vista, baby.","Houston, we have a problem.","To infinity and beyond!","Alright, alright, alright.","I'm the king of the world!","I am the one who knocks.","Why so serious?","Wakanda forever!","With great power comes great responsibility.","Just keep swimming.","Get out of my swamp!","Life is like a box of chocolates.","E.T. phone home.","You talking to me?","Here's Johnny!","But did you die?","Oh, hi, Mark.","Look at me. I'm the captain now.","My name is Jeff.","That escalated quickly."],"Vine & throwback viral clips":["Oh my God, they were roommates.","Road work ahead? Uh, yeah, I sure hope it does.","What are those?","Damn, Daniel!","It is Wednesday, my dudes.","It's an avocado! Thanks!","Hi, welcome to Chili's.","I smell like beef.","I could've dropped my croissant!","I'm in me mum's car.","I have the power of God and anime on my side.","Can I pet that dog?","I'm not a cat.","This is private property.","I just a baby.","Merry Chrysler.","Put it in reverse, Terry!","What the dog doin'?","Lock 'em up!"],"TikTok & internet reactions":["Why are you running?","Emotional damage!","Haiyaa!","Let him cook.","It's giving.","Delulu is the solulu.","Touch grass.","No thoughts, head empty.","Caught in 4K.","We listen and we don't judge.","Hear me out.","Nobody's gonna know.","They're gonna know.","Don't be suspicious.","I said what I said.","Oh no, baby! What is you doin?","Just put my fries in the bag, bro.","Standing on business."],"Sitcom & comedy catchphrases":["Release the hounds!","How you doin'?","We were on a break!","Pivot!","That's what she said.","Treat yo' self.","Bazinga!","Did I do that?","D'oh!","Eat my shorts!","How rude!","Have mercy!","Suit up!","How do you do, fellow kids?"],"Gaming & classic internet memes":["Press F to pay respects.","Get over here!","Do a barrel roll!","The cake is a lie.","It's dangerous to go alone! Take this.","It's-a me, Mario!","This is fine.","One does not simply walk into Mordor.","Ain't much, but it's honest work.","Shut up and take my money!"]},"scenes":[["Pickup truck window","A person seated in a pickup truck seen through the open driver's window.","Seated behind a steering wheel, arm on the open window","Serious and assertive","View through an open car window","Pickup truck interior with open window"],["Front porch side-eye","A character guarding their peace from a front porch.","Sitting on a porch chair","Dramatic side-eye","Eye-level three-quarter view","Front porch and rocking chair"],["Coffee counter comeback","A character delivering a dry comeback at a coffee-shop counter.","Leaning on a counter","Deadpan stare","Medium waist-up shot","Coffee-shop counter"],["Kitchen opinion","A character making an announcement while cooking.","Standing with hands on hips","Raised eyebrow","Eye-level front view","Modern kitchen"],["Grocery aisle disbelief","A character reacting to prices in a grocery-store aisle.","Holding a shopping bag","Shocked disbelief","Full-body view","Grocery-store aisle"],["Office meeting survivor","A character reacting during a long office meeting.","Resting chin on one hand","Exhausted expression","Medium waist-up shot","Office cubicle"],["Salon mirror reaction","A character reacting to their new look in the salon mirror.","Looking over sunglasses","Confident smile","Mirror reflection view","Salon mirror and chair"],["Couch commentary","A character giving commentary from a cozy couch.","Reclining on a couch","Smug and unbothered","Eye-level front view","Cozy living room"],["Doorway surprise","A character discovering an unexpected visitor.","Peeking around a doorway","Wide-eyed surprise","Eye-level front view","Haunted-house doorway"],["Diner booth gossip","A character sharing an opinion from a diner booth.","Sipping from a mug","Sarcastic smirk","Eye-level three-quarter view","Neon diner booth"],["Beach vacation boundaries","A character enjoying a peaceful beach day.","Looking over sunglasses","Calm and elegant","Medium waist-up shot","Beach at sunset"],["Farmyard announcement","A character making a serious announcement in a barn.","Pointing one finger at the viewer","Serious and assertive","Eye-level front view","Farm barn"],["Gym motivation","A character celebrating a workout with attitude.","Giving a thumbs-up","Proud and pleased","Low-angle heroic view","Gym floor"],["Laundry-day drama","A character reacting to another load of laundry.","Shrugging with both palms up","Playfully offended","Eye-level three-quarter view","Laundry room"],["Gaming-room side-eye","A character reacting to an unexpected game result.","Holding a phone at eye level","Suspicious squint","Medium waist-up shot","Gaming room with LED lights"],["Airport delay","A character waiting through a flight delay.","Seated with arms crossed","Disappointed but composed","Wide establishing view","Airport waiting area"],["Food-truck order","A character taking a complicated food order.","Leaning on a counter","Trying not to laugh","Eye-level front view","Food-truck window"],["Boutique mirror moment","A character admiring an outfit in a dressing room.","Taking a mirror selfie","Confident smile","Mirror reflection view","Boutique dressing room"],["Pumpkin-patch attitude","A character giving seasonal side-eye among pumpkins.","Standing with hands on hips","Dramatic side-eye","Full-body view","Halloween pumpkin patch"],["Haunted-door greeting","A spooky character welcoming a visitor at the doorway.","Waving dismissively","Mischievous grin","Slightly low angle","Haunted-house doorway"],["Holiday shopping","A character carrying shopping bags on a festive street.","Holding a shopping bag","Trying not to laugh","Full-body view","Snowy holiday street"],["Birthday announcement","A character making a birthday announcement.","Holding a microphone","Sweet and cheerful","Eye-level front view","Birthday party backdrop"],["Graduation confidence","A character celebrating a new accomplishment.","Hands raised in surprise","Proud and pleased","Low-angle heroic view","Graduation stage"],["Stage-mic comeback","A character delivering a one-line comeback on stage.","Holding a microphone","Sarcastic smirk","Slightly low angle","Concert stage"],["Garden tea time","A character enjoying tea while sharing an opinion.","Sipping from a mug","Smug and unbothered","Eye-level three-quarter view","Garden patio"],["Country-road stop","A character telling someone to stop on a country road.","Holding up a stop hand","Serious and assertive","Eye-level front view","Dusty country road"],["City-street main character","A character making a confident entrance at night.","Walking confidently toward camera","Fierce determination","Low-angle heroic view","City street at night"],["Flower-shop comeback","A character holding flowers with a pointed expression.","Holding a shopping bag","Raised eyebrow","Medium waist-up shot","Flower shop"],["Warehouse workday","A character ending a shift with an unbothered attitude.","Seated with arms crossed","Smug and unbothered","Eye-level front view","Warehouse loading dock"],["Retro-TV commentary","An expressive character commenting from a retro studio.","Pointing at a sign","Deadpan stare","Centered symmetrical framing","Retro checkerboard pattern"],["Artist worktable · complete setup","An original creator character at a paint-covered worktable, presenting a finished artwork.","Pointing at a sign","Proud and pleased","Medium waist-up shot","Art studio with canvases, brushes and a worktable",{"character":"Other animal","characterPreset":"Fox","outfit":"Apron","saying":"Let him cook.","customCharacter":""}],["Runway entrance · complete setup","An original plus-size fashion character making a confident runway entrance.","Walking confidently toward camera","Confident smile","Low-angle heroic view","Fashion runway with bright stage lights",{"character":"Person","characterPreset":"Plus-size woman","outfit":"Glam sequin jacket","saying":"Very demure, very mindful.","customCharacter":""}],["Spooky movie reaction · complete setup","An original character reacting dramatically to a spooky movie from a couch.","Covering the mouth in disbelief","Wide-eyed surprise","Medium waist-up shot","Cozy living room with dim movie-night lighting",{"character":"Cat","characterPreset":"Black cat","outfit":"Pajamas","saying":"Mama, a girl behind you.","customCharacter":""}]]};
+function addPreset(parent,id,label,values,handler){
+const input=field(parent,id,label,["Choose a preset…",...values]);delete input.dataset.field;
+input.addEventListener("change",()=>{if(input.selectedIndex===0)return;handler(input.value);renderState();invalidate();persist();notice(label+" applied. You can edit the wording below.");});return input;
+}
+function syncPresets(){
+for(const [id,target]of [["poseChoice","pose"],["expressionChoice","expression"],["angleChoice","angle"],["backgroundChoice","background"],["paletteChoice","palette"]]){
+const input=$(id);if(input)input.value=[...input.options].some(o=>o.value===state[target])?state[target]:"Choose a preset…";
+}
+const sceneChoice=$("sceneChoice");if(sceneChoice){const pack=OPTIONS.scenes.find(s=>s[1]===state.scene);sceneChoice.value=pack?pack[0]:"Choose a preset…";}
+const source=$("openSource");if(source){const url=safeTikTokURL(state.sourceURL);source.hidden=!url;source.href=url||"#";}
+}
+function safeTikTokURL(value){
+try{const u=new URL(value);if(u.protocol!=="https:"||!(u.hostname==="tiktok.com"||u.hostname.endsWith(".tiktok.com")))return "";return u.href;}catch(e){return "";}
+}
+function updateCharacterOptions(){
+const input=$("characterPreset");if(!input)return;
+input.replaceChildren();for(const value of ["",...(OPTIONS.characters[state.character]||[])]){
+const option=el("option",value||"Keep current / custom wording");option.value=value;input.append(option);
+}
+if(state.characterPreset&&![...input.options].some(o=>o.value===state.characterPreset)){
+const option=el("option",state.characterPreset);option.value=state.characterPreset;input.append(option);
+}
+input.disabled=state.character==="Custom character";
+}
+const sayingPanel=$("addSaying").closest("section");
+const libraryGrid=group(sayingPanel,"Browse the larger library");
+field(libraryGrid,"sayingCategory","Saying category",["All catchphrases","My saved sayings",...Object.keys(OPTIONS.sayings)]);delete $("sayingCategory").dataset.field;
+field(libraryGrid,"sayingChoice","Choose a saying",["Choose a saying…"]);delete $("sayingChoice").dataset.field;
+function renderSayingChoices(){
+const category=$("sayingCategory").value;
+const entries=category==="My saved sayings"?sayings:category==="All catchphrases"?[...STARTERS,...Object.values(OPTIONS.sayings).flat(),...sayings]:(OPTIONS.sayings[category]||[]);
+$("sayingChoice").replaceChildren(el("option","Choose a saying…"));
+for(const text of [...new Set(entries)]){const opt=el("option",text);opt.value=text;$("sayingChoice").append(opt);}
+}
+$("sayingCategory").addEventListener("change",renderSayingChoices);
+$("sayingChoice").addEventListener("change",()=>{if(!$("sayingChoice").selectedIndex)return;state.saying=$("sayingChoice").value;renderState();invalidate();persist();notice("Catchphrase loaded with its source link. You can edit its exact wording.");});
+
+const phraseEvidence=el("div",undefined,"hint");phraseEvidence.id="phraseEvidence";sayingPanel.append(phraseEvidence);
+function renderPhraseEvidence(){
+const box=$("phraseEvidence");if(!box)return;box.replaceChildren();
+const entry=CATCHPHRASES.find(record=>record.phrase===state.saying);
+if(!state.saying.trim())return;
+if(!entry){box.append(el("span","Custom or previously saved wording. Choose a catalog catchphrase above to see its source."));return;}
+box.append(el("span",entry.category+" · source checked "+entry.checked+" · "));
+const link=el("a","View catchphrase source");link.href=entry.sourceURL;link.target="_blank";link.rel="noopener noreferrer";box.append(link);
+}
+
+const presetGrid=group($("sceneFields"),"Quick scene & pose dropdowns");
+addPreset(presetGrid,"sceneChoice","Scene pack",OPTIONS.scenes.map(s=>s[0]),value=>{
+const pack=OPTIONS.scenes.find(s=>s[0]===value);["scene","pose","expression","angle","background"].forEach((key,index)=>state[key]=pack[index+1]);if(pack[6])Object.assign(state,pack[6]);
+});
+addPreset(presetGrid,"poseChoice","Pose preset",OPTIONS.poses,value=>state.pose=value);
+addPreset(presetGrid,"expressionChoice","Expression preset",OPTIONS.expressions,value=>state.expression=value);
+addPreset(presetGrid,"angleChoice","Camera preset",OPTIONS.angles,value=>state.angle=value);
+addPreset(presetGrid,"backgroundChoice","Background preset",OPTIONS.backgrounds,value=>state.background=value);
+const extras=group($("sceneFields"),"Character detail dropdowns");
+field(extras,"characterPreset","Character option",[""]);
+field(extras,"characterDetails","Extra character details");
+field(extras,"outfit","Outfit",OPTIONS.outfits);
+field(extras,"accessory","Accessory",OPTIONS.accessories);
+$("character").addEventListener("change",()=>{state.characterPreset="";state.customCharacter="";updateCharacterOptions();renderState();invalidate();persist();});
+$("characterPreset").addEventListener("change",()=>{state.customCharacter="";renderState();invalidate();persist();});
+const sceneContainer=$("sceneFields");sceneContainer.prepend(presetGrid.previousElementSibling,presetGrid);charGrid.after(extras.previousElementSibling,extras);
+const paletteGrid=group($("typeFields"),"More color combinations");
+addPreset(paletteGrid,"paletteChoice","Palette preset",OPTIONS.palettes,value=>state.palette=value);
+
+const findSection=el("details");findSection.style.marginTop="16px";
+findSection.append(el("summary","Find a catchphrase on TikTok"));
+const searchButton=el("button","Find this saying on TikTok");searchButton.type="button";searchButton.className="small";
+searchButton.addEventListener("click",()=>{
+if(!state.saying.trim())return notice("Choose or type a saying first.",true);
+window.open("https://www.tiktok.com/search?q="+encodeURIComponent(state.saying),"_blank","noopener,noreferrer");
+});
+findSection.append(el("p","Search TikTok for your current saying and optionally save a video link.","hint"),searchButton);
+const sourceGrid=el("div");field(sourceGrid,"sourceURL","TikTok source link (optional)");findSection.append(sourceGrid);
+const sourceLink=el("a","Open saved TikTok source");sourceLink.id="openSource";sourceLink.target="_blank";sourceLink.rel="noopener noreferrer";sourceLink.hidden=true;findSection.append(sourceLink);
+sayingPanel.append(findSection);
+presetGrid.after(el("p","Scene packs fill in your scene details. Options marked complete setup also choose a saying, character and outfit. You can edit everything afterward.","hint"));
+
+function pickOne(values){return values[Math.floor(Math.random()*values.length)];}
+function pickDifferent(values,current){return pickOne(values.filter(value=>value!==current).length?values.filter(value=>value!==current):values);}
+function shuffleDraft(current,full){
+const next=JSON.parse(JSON.stringify(current));
+const categories=Object.keys(OPTIONS.characters).filter(key=>key!=="Custom character");
+next.character=pickDifferent(categories,current.character);
+next.characterPreset=pickOne(OPTIONS.characters[next.character]);
+next.customCharacter="";next.characterDetails="";
+next.outfit=pickOne(OPTIONS.outfits);next.accessory=pickOne(OPTIONS.accessories);
+const styles=Object.keys(STYLES).sort(()=>Math.random()-.5);
+next.styles=styles.slice(0,1+Math.floor(Math.random()*3));
+next.font=pickOne(OPTIONS.fonts);next.palette=pickOne(OPTIONS.palettes.filter(p=>p!=="Custom colors"));
+next.outline=pickOne(["Contrasting outline","Double outline","No outline","White sticker outline"]);
+next.shadow=pickOne(["No shadow","Soft drop shadow","Hard offset shadow"]);
+next.decor=pickOne(OPTIONS.decor);next.curve=Math.random()<.35;next.stacked=Math.random()<.35;
+if(full){
+const scene=pickOne(OPTIONS.scenes);
+{
+["scene","pose","expression","angle","background"].forEach((key,index)=>next[key]=scene[index+1]);
+const theme= /Pumpkin|Haunted|Holiday/.test(scene[0])?"Movie catchphrases": /Office|Warehouse|Airport/.test(scene[0])?"Sitcom & comedy catchphrases": /porch|Couch|Garden|Farm/i.test(scene[0])?"Reality TV, shade & viral reactions":"TikTok & creator catchphrases";
+next.saying=pickDifferent(OPTIONS.sayings[theme],current.saying);
+}
+next.sourceURL="";next.sourceNote="";
+next.product=pickOne(["T-shirt","Tote bag","Tumbler","Hoodie","Sweatshirt","Mug","Sticker","Poster","Phone case","Pillow","Notebook"]);
+if(next.product==="Tumbler"||next.product==="Mug"){next.layout="Full wrap";next.proportions=next.product==="Tumbler"?"3:1 horizontal wrap":"2:1 wrap";next.placement="Edge-to-edge wrap";}
+else{next.layout="Centered front";next.proportions=["Sticker","Pillow"].includes(next.product)?"1:1 square":"3:4 portrait";next.placement=next.product==="Tote bag"?"Centered bag panel":"Large centered print";}
+}
+return next;
+}
+let beforeShuffle=null;
+function clearUndo(){beforeShuffle=null;const button=$("undoHero");if(button)button.disabled=true;}
+function runShuffle(full){
+beforeShuffle=JSON.parse(JSON.stringify(state));state=shuffleDraft(state,full);
+renderState();invalidate();persist();
+for(const id of ["undoHero"])$(id).disabled=false;
+if(full){generate();notice("Surprise ready: a new saying, character and design setup. Undo restores your previous draft. This is a creative idea, not a verified TikTok trend.");}
+else {showTab("character");notice("Random options loaded. Your saying, scene and product are kept. Click Generate prompts when ready, or Undo.");}
+}
+const heroActions=el("div",undefined,"actions");
+const bottomActions=$("generate").parentElement;
+for(const [parent,suffix]of [[heroActions,"Hero"]]){
+const random=el("button","Random");random.id="random"+suffix;random.type="button";random.title="Shuffle character and styling; keep your saying, scene and product.";random.addEventListener("click",()=>runShuffle(false));
+const surprise=el("button","Surprise Me");surprise.id="surprise"+suffix;surprise.type="button";surprise.title="Make and generate a complete creative setup.";surprise.addEventListener("click",()=>runShuffle(true));
+const undo=el("button","Undo shuffle");undo.id="undo"+suffix;undo.type="button";undo.disabled=true;undo.addEventListener("click",()=>{
+if(!beforeShuffle)return;state=beforeShuffle;beforeShuffle=null;renderState();invalidate();persist();
+$("undoHero").disabled=true;notice("Your previous draft is restored. Favorites and saved sayings are unchanged.");
+});
+parent.append(random,surprise,undo);
+}
+$("example").after(heroActions);
+heroActions.after(el("p","Random keeps your saying and scene. Surprise Me builds a complete idea. Undo shuffle restores the previous draft.","hint"));
+
+
+
+document.title=APP_NAME;document.querySelector(".brand").textContent=APP_NAME;
+const main=document.querySelector("main");
+const hero=document.querySelector(".hero");
+hero.id="welcome";hero.querySelector("h1").innerHTML="Big catchphrase energy.<br><em>Your creative remix.</em>";
+hero.querySelector(".eyebrow").textContent="Welcome to "+APP_NAME;
+hero.querySelector("p").textContent="Pick a saying. Choose your character. Make it your style. Build your design one easy step at a time.";
+const startButton=el("button","Start creating →","primary");startButton.id="startCreating";startButton.type="button";startButton.addEventListener("click",()=>showTab("sayings"));
+$("example").before(startButton);
+const heroStats=el("div",undefined,"heroStats");
+for(const text of ["118 catchphrases","33 art styles","Individual canvas prompts"])heroStats.append(el("span",text));
+
+hero.querySelector(".quoteBox").querySelector(".hint").textContent="Say it. Swap it. Style it.";
+const quoteLabel=hero.querySelector(".quoteBox .eyebrow");quoteLabel.textContent="Your current saying";
+const welcomeGuide=el("div",undefined,"welcomeGuide");
+[["01","Choose a saying","Explore real catchphrases or use your exact words."],["02","Build your remix","Pick a scene, character, product and art styles."],["03","Copy & create","Get separate prompts or one batch prompt."]].forEach(([num,title,body])=>{
+const card=el("div");card.append(el("span",num,"eyebrow"),el("h3",title),el("p",body,"hint"));welcomeGuide.append(card);
+});
+
+const oldWorkspace=document.querySelector(".workspace");
+const formPanels=[...oldWorkspace.querySelectorAll(":scope > div > .panel")];
+const resultPanel=oldWorkspace.querySelector(".resultsPane .panel");
+const savedPanel=oldWorkspace.querySelector(".resultsPane .panel:last-child");
+const studio=el("div",undefined,"studio");studio.id="studio";studio.hidden=true;
+const nav=el("nav",undefined,"studioNav");nav.setAttribute("aria-label","Generator sections");
+const navHeading=el("p","Your creative studio","eyebrow");nav.append(navHeading);
+const tabList=el("div");tabList.setAttribute("role","tablist");tabList.setAttribute("aria-label","Design steps");nav.append(tabList);
+const content=el("div",undefined,"studioContent");
+const tabSpecs=[
+["presets","Presets","Ready-made design sets"],
+["sayings","1 · Sayings","Choose your catchphrase"],
+["scene","2 · Scene","Set the scene"],
+["character","3 · Character","Choose your new main character"],
+["product","4 · Product","Choose your merchandise"],
+["styles","5 · Art styles","Choose your art styles"],
+["typography","6 · Typography","Style the words"],
+["prompts","Your prompts","Your prompt collection"],
+["saved","Saved work","Your saved work"]
+];
+const tabPanels={},tabButtons={};
+for(const [id,label,title]of tabSpecs){
+const tab=el("button",label.replace(/^\d+ · /,""));tab.type="button";tab.id="tab-"+id;tab.setAttribute("role","tab");tab.setAttribute("aria-controls","panel-"+id);tab.setAttribute("aria-selected","false");tab.addEventListener("click",()=>showTab(id));tabList.append(tab);tabButtons[id]=tab;
+const panel=el("section",undefined,"tabPanel");panel.id="panel-"+id;panel.setAttribute("role","tabpanel");panel.setAttribute("aria-labelledby",tab.id);panel.hidden=true;content.append(panel);tabPanels[id]=panel;
+}
+const homeButton=el("button","← Welcome","small");homeButton.type="button";homeButton.addEventListener("click",()=>showTab("welcome"));nav.append(homeButton);
+studio.append(nav,content);main.insertBefore(studio,oldWorkspace);
+tabPanels.sayings.append(formPanels[0]);formPanels[0].querySelector("h2").textContent="Choose your catchphrase";
+tabPanels.scene.append(formPanels[1]);formPanels[1].querySelector("h2").textContent="Set the scene";
+const sceneAdvanced=el("details",undefined,"advanced");
+sceneAdvanced.append(el("summary","Fine-tune pose, expression & background"));
+for(const id of ["poseChoice","expressionChoice","angleChoice","backgroundChoice"])sceneAdvanced.append($(id).closest("label"));
+const customSceneHeading=sceneGrid.previousElementSibling;
+sceneAdvanced.append(customSceneHeading,sceneGrid,locks);
+presetGrid.after(sceneAdvanced);
+const characterPanel=el("div",undefined,"panel");characterPanel.append(el("h2","Choose your new main character"),el("p","Select a character group, then choose the character you want.","hint"));
+const oldCharHeading=charGrid.previousElementSibling;const oldExtrasHeading=extras.previousElementSibling;
+const customCharacterLabel=$("customCharacter").closest("label"),extraDetailsLabel=$("characterDetails").closest("label");
+charGrid.append($("characterPreset").closest("label"));
+const characterAdvanced=el("details",undefined,"advanced");
+characterAdvanced.append(el("summary","Describe a custom character"),customCharacterLabel,extraDetailsLabel);
+characterPanel.append(charGrid,el("h3","Outfit & accessories"),extras,characterAdvanced);
+oldCharHeading.remove();oldExtrasHeading.remove();tabPanels.character.append(characterPanel);
+const productPanel=formPanels[2];
+const styleHeading=$("styles").previousElementSibling.previousElementSibling;
+const styleHint=$("styles").previousElementSibling;
+const stylesPanel=el("div",undefined,"panel");
+stylesPanel.append(el("h2","Choose your art styles"),el("p","Select one or more. Each style gets its own separate prompt.","hint"));
+const styleSearch=el("input");styleSearch.type="search";styleSearch.id="styleSearch";styleSearch.placeholder="Search styles, e.g. cartoon, clay, watercolor";
+const styleSearchLabel=el("label",undefined,"field");styleSearchLabel.append(el("span","Search art styles"),styleSearch);stylesPanel.append(styleSearchLabel,$("styles"));
+styleSearch.addEventListener("input",()=>{const term=styleSearch.value.toLowerCase();for(const label of $("styles").children)label.hidden=!label.textContent.toLowerCase().includes(term);});
+styleHeading.remove();styleHint.remove();productPanel.querySelector("h2").textContent="Choose your merchandise";tabPanels.product.append(productPanel);tabPanels.styles.append(stylesPanel);
+const typographyPanel=formPanels[3];typographyPanel.querySelector("h2").textContent="Style the words";
+typeGrid.previousElementSibling.remove();
+const typeAdvanced=el("details",undefined,"advanced");typeAdvanced.append(el("summary","More lettering effects & custom colors"));
+for(const id of ["palette","outline","shadow","decor"])typeAdvanced.append($(id).closest("label"));
+for(const id of ["curve","stacked"])typeAdvanced.append($(id).closest("label"));
+typeGrid.append($("paletteChoice").closest("label"));paletteGrid.previousElementSibling.remove();paletteGrid.remove();
+typeGrid.after(typeAdvanced);
+tabPanels.typography.append(typographyPanel);
+tabPanels.prompts.append(resultPanel);tabPanels.saved.append(savedPanel);
+resultPanel.querySelector("h2").textContent="Your separate design prompts";
+savedPanel.querySelector("h2").firstChild.textContent="Saved favorites ";
+const copyBackup=el('button','Copy backup');copyBackup.id='copyBackup';copyBackup.type='button';copyBackup.addEventListener('click',()=>{const text=JSON.stringify(backup(),null,2);showManualCopy(text);copyText(text);});$('export').after(copyBackup);
+savedPanel.append(el('p','If the download is blocked, Copy backup gives you the same data. Paste it into a plain text file and save it with a .json extension for importing later.','hint'));
+const oldActions=$("generate").parentElement;
+const toolbar=el("div",undefined,"studioToolbar");toolbar.id="studioToolbar";main.insertBefore(toolbar,oldWorkspace);
+const workflow=el("div",undefined,"workflow");const previous=el("button","← Back");previous.id="previousStep";previous.type="button";const next=el("button","Next step →","primary");next.id="nextStep";next.type="button";workflow.append(previous,next);
+const remixActions=el("div",undefined,"remixActions");toolbar.append(remixActions);
+for(const id of ["randomHero","surpriseHero","undoHero","generate","reset"])remixActions.append($(id));
+$("undoHero").textContent="Undo";
+toolbar.append(workflow,remixActions,el("p","Random remixes your current idea. Surprise Me creates a complete new idea.","hint"));
+oldActions.remove();
+heroActions.remove();
+const oldHelper=[...hero.querySelectorAll("p.hint")].find(n=>n.textContent.startsWith("Random keeps"));if(oldHelper)oldHelper.remove();
+studio.append(nav,content);
+main.insertBefore(studio,oldWorkspace);main.insertBefore(toolbar,oldWorkspace);oldWorkspace.remove();
+const footer=document.querySelector(".footer");
+footer.textContent="Text prompts only. Paste into your preferred image generator. Check wording and print dimensions before production.";
+let activeTab="welcome";
+const buildSteps=["sayings","scene","character","product","styles","typography"];
+function showTab(id){
+activeTab=id;const welcome=id==="welcome";if(menuDialog.open)menuDialog.close();
+hero.hidden=!welcome;studio.hidden=welcome;toolbar.hidden=welcome||id==="saved";
+for(const key of Object.keys(tabPanels)){tabPanels[key].hidden=key!==id;tabButtons[key].setAttribute("aria-selected",String(key===id));tabButtons[key].tabIndex=key===id||(welcome&&key==="presets")?0:-1;}
+const index=buildSteps.indexOf(id);
+workflow.hidden=index<0;previous.disabled=index<=0;next.hidden=index===buildSteps.length-1;
+remixActions.hidden=id==="saved";
+footer.hidden=!welcome;
+window.scrollTo({top:0,behavior:"instant"});
+}
+previous.addEventListener("click",()=>{const index=buildSteps.indexOf(activeTab);if(index>0)showTab(buildSteps[index-1]);});
+next.addEventListener("click",()=>{const index=buildSteps.indexOf(activeTab);if(index>=0&&index<buildSteps.length-1)showTab(buildSteps[index+1]);});
+tabList.addEventListener("keydown",event=>{
+if(!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End"].includes(event.key))return;event.preventDefault();
+const ids=tabSpecs.map(s=>s[0]);let index=ids.indexOf(document.activeElement.id.replace("tab-",""));
+if(event.key==="Home")index=0;else if(event.key==="End")index=ids.length-1;else index=(index+(["ArrowRight","ArrowDown"].includes(event.key)?1:-1)+ids.length)%ids.length;
+tabButtons[ids[index]].focus();
+});
+function showMissingStep(){
+if(!state.saying.trim()){showTab('sayings');$('saying').focus();}
+else if(!state.styles.length){showTab('styles');$('styles').querySelector('input').focus();}
+else if(state.placement==='Custom placement'&&!state.customPlacement.trim()){showTab('product');$('customPlacement').focus();}
+else if((state.character==='Custom character'&&!state.customCharacter.trim())||(!['Dog','Cat'].includes(state.character)&&!state.customCharacter.trim()&&!state.characterPreset)){showTab('character');characterAdvanced.open=true;$('customCharacter').focus();}
+else if(!state.palette.trim()){showTab('typography');typeAdvanced.open=true;$('palette').focus();}
+else{showTab('scene');sceneAdvanced.open=true;$('scene').focus();}
+}
+
+// Ready-made combinations live inside the menu, never on the home screen.
+const READY_SETS=Array.from({length:53},(_,i)=>{
+const scene=OPTIONS.scenes[i%OPTIONS.scenes.length];
+const category=['Dog','Cat','Other animal','Fictional character','Person','Food character','Object character'][i%7];
+const character=OPTIONS.characters[category][Math.floor(i/7)%OPTIONS.characters[category].length];
+const product=['T-shirt','Tote bag','Tumbler'][i%3];
+const saying=CATCHPHRASES[(i*7)%CATCHPHRASES.length].phrase;
+const styleNames=Object.keys(STYLES);const styles=[styleNames[i%styleNames.length],styleNames[(i+9)%styleNames.length]];
+return {name:scene[0].replace(' · complete setup','')+' · '+character+' · '+product,scene,category,character,product,saying,styles,palette:OPTIONS.palettes[i%(OPTIONS.palettes.length-1)]};
+});
+const setsPanel=el('div',undefined,'panel');setsPanel.append(el('h2','Ready-made design sets'),el('p','Choose a starter combination, then make it your own. These are creative presets, not a current TikTok trend ranking.','hint'));
+const setsSearch=el('input');setsSearch.id='setsSearch';setsSearch.type='search';setsSearch.placeholder='Search a scene, character, saying or product';
+const setsSearchLabel=el('label',undefined,'field');setsSearchLabel.append(el('span','Search presets'),setsSearch);
+const setsSelect=el('select');setsSelect.id='setsSelect';const setsLabel=el('label',undefined,'field');setsLabel.append(el('span','Choose a preset'),setsSelect);
+const setsPreview=el('div',undefined,'presetPreview');setsPreview.id='setsPreview';
+const useSet=el('button','Use this set','primary');useSet.id='useSet';useSet.type='button';
+setsPanel.append(setsSearchLabel,setsLabel,setsPreview,useSet);tabPanels.presets.append(setsPanel);
+function previewSet(){const set=READY_SETS[Number(setsSelect.value)];setsPreview.replaceChildren();useSet.disabled=!set||setsSelect.value==='';if(useSet.disabled)return;
+setsPreview.append(el('blockquote',set.saying),el('p',set.character+' · '+set.product+' · '+set.styles.join(' / ')),el('p',set.scene[1],'hint'),el('p','Palette: '+set.palette,'hint'));}
+function filterSets(){const current=setsSelect.value;const term=setsSearch.value.toLowerCase();setsSelect.replaceChildren();const placeholder=el('option','Choose a preset…');placeholder.value='';setsSelect.append(placeholder);
+READY_SETS.forEach((set,index)=>{if((set.name+' '+set.saying+' '+set.styles.join(' ')).toLowerCase().includes(term)){const option=el('option',set.name);option.value=String(index);setsSelect.append(option);}});
+if([...setsSelect.options].some(option=>option.value===current))setsSelect.value=current;previewSet();}
+setsSearch.addEventListener('input',filterSets);setsSelect.addEventListener('change',previewSet);
+useSet.addEventListener('click',()=>{if(setsSelect.value==='')return;const set=READY_SETS[Number(setsSelect.value)];beforeShuffle=JSON.parse(JSON.stringify(state));
+state={...state,saying:set.saying,character:set.category,characterPreset:set.character,customCharacter:'',characterDetails:'',outfit:'No outfit / natural character',accessory:'None',styles:[...set.styles],product:set.product,palette:set.palette,sourceURL:'',sourceNote:''};
+['scene','pose','expression','angle','background'].forEach((key,index)=>state[key]=set.scene[index+1]);
+state.layout=set.product==='Tumbler'?'Full wrap':'Centered front';state.proportions=set.product==='Tumbler'?'3:1 horizontal wrap':'3:4 portrait';state.placement=set.product==='Tumbler'?'Edge-to-edge wrap':set.product==='Tote bag'?'Centered bag panel':'Large centered print';
+renderState();invalidate();persist();$('undoHero').disabled=false;showTab('sayings');notice('Preset loaded. Edit any section, then Generate prompts. Undo restores your previous draft.');});
+filterSets();
+
+// Keep navigation and guidance available without filling the welcome screen.
+const studioHeader=document.querySelector('.top');
+studioHeader.querySelector('.badge').remove();
+const topActions=el('div',undefined,'topActions');
+const helpButton=el('button','How to use','helpButton');helpButton.id='howToUse';helpButton.type='button';
+const menuButton=el('button',undefined,'menuButton');menuButton.id='menuButton';menuButton.type='button';menuButton.setAttribute('aria-label','Open menu');menuButton.setAttribute('aria-haspopup','dialog');menuButton.innerHTML='<span aria-hidden="true">☰</span><span>Menu</span>';
+topActions.append(helpButton,menuButton);studioHeader.append(topActions);
+const menuDialog=el('dialog',undefined,'menuDialog');menuDialog.id='studioMenu';menuDialog.setAttribute('aria-labelledby','menuTitle');
+const menuHead=el('div',undefined,'dialogHead');const menuTitle=el('h2','Your studio');menuTitle.id='menuTitle';
+const closeMenu=el('button','×','dialogClose');closeMenu.type='button';closeMenu.setAttribute('aria-label','Close menu');closeMenu.addEventListener('click',()=>menuDialog.close());menuHead.append(menuTitle,closeMenu);
+menuDialog.append(menuHead,startButton,nav);document.body.append(menuDialog);navHeading.remove();
+studio.style.gridTemplateColumns='minmax(0,1fr)';toolbar.style.marginLeft='0';
+menuButton.addEventListener('click',()=>{menuDialog.showModal();(tabButtons[activeTab]||tabButtons.presets).focus();});
+const helpDialog=el('dialog',undefined,'helpDialog');helpDialog.id='helpDialog';helpDialog.setAttribute('aria-labelledby','helpTitle');
+const helpHead=el('div',undefined,'dialogHead');const helpTitle=el('h2','How to use your studio');helpTitle.id='helpTitle';
+const closeHelp=el('button','×','dialogClose');closeHelp.type='button';closeHelp.setAttribute('aria-label','Close how to use');closeHelp.addEventListener('click',()=>helpDialog.close());helpHead.append(helpTitle,closeHelp);
+helpDialog.append(helpHead,el('p','Open Menu whenever you want to move to another section.','hint'));
+for(const [heading,text]of [
+['Choose your saying','Open Sayings. Pick a catchphrase or type your own exact words. Use Save saying to keep it.'],
+['Build your idea','Choose a scene, then a character and product. Open the extra settings only when you want more detail.'],
+['Choose your look','Select one or more art styles, then set your lettering and colors. Each style gets a separate prompt.'],
+['Generate and copy','Click Generate prompts. Copy one prompt, use Copy All, or use Copy Batch Prompt to request separate individual canvases. Paste the text into your image generator.'],
+['Keep your work','Use Save Favorite for a design you like. Open Saved work to load favorites or export and import a backup. Reset keeps your saved collection.']
+]){helpDialog.append(el('h3',heading),el('p',text));}
+helpDialog.append(el('p','Random keeps your saying, scene and product while remixing design choices. Surprise Me creates a new complete idea. Undo restores the draft before either action.','hint'));
+helpDialog.append(el('p','Browser saving is local to this file or website address. Export a backup before moving the HTML file, switching devices or clearing browser data. This independent tool is not affiliated with TikTok. Style labels describe visual concepts; vector, embroidery and rhinestone output still needs production preparation.','hint'));
+const gotIt=el('button','Got it','primary');gotIt.type='button';gotIt.addEventListener('click',()=>helpDialog.close());helpDialog.append(gotIt);document.body.append(helpDialog);
+helpButton.addEventListener('click',()=>helpDialog.showModal());
+for(const dialog of [menuDialog,helpDialog])dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
+
+const placementLabel=field(productGrid,'customPlacement','Describe custom print placement').closest('label');
+function syncCustomFields(){placementLabel.hidden=state.placement!=='Custom placement';}
+$('placement').addEventListener('change',()=>{syncCustomFields();if(!placementLabel.hidden)$('customPlacement').focus();});
+$('character').addEventListener('change',()=>{if(state.character==='Custom character'){characterAdvanced.open=true;$('customCharacter').focus();}});
+$('paletteChoice').addEventListener('change',()=>{if($('paletteChoice').value==='Custom colors'){state.palette='';typeAdvanced.open=true;$('palette').value='';$('palette').focus();persist();}});
+syncCustomFields();
+$("example").remove();
+showTab("welcome");
+
+renderSayingChoices();
+renderState();renderFavorites();invalidate();$("saveState").textContent=storageAvailable?"Settings stay in this browser":"Browser saving unavailable — export a backup";
+</script></body></html>
