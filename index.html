@@ -75,6 +75,7 @@ main{max-width:1320px}
 
 button,.import{min-height:44px}.style,.checkline{min-height:44px}.eyebrow{color:#aa3c2c}.topActions button{min-height:44px}.helpDialog{overflow-y:auto}.studioContent{min-width:0}.presetPreview{overflow-wrap:anywhere}
 @media(max-width:560px){.remixActions button{min-height:44px}.topActions button{min-height:44px}.prompthead{flex-wrap:wrap}}
+.footer{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding:24px 0 8px;margin-top:32px}.footerCTA{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 20px;background:var(--ink);color:white;border:1px solid var(--ink);border-radius:10px;text-decoration:none;font-size:14px;font-weight:700}.footerCTA:hover{background:#245456}.footerShop{background:var(--mint);color:var(--ink);border-color:#bdd1b4}.footerShop:hover{background:#cce7c0}@media(max-width:560px){.footerCTA{width:100%}}
 </style></head><body>
 <header class="top"><span class="brand">Flip the Catchphrase Studio</span><span class="badge">Say it. Swap it. Style it.</span></header>
 <main><section class="hero"><div><span class="eyebrow">The merchandise prompt studio</span><h1>Same saying.<br><em>New main character.</em></h1><p>Turn spoken TikTok catchphrases into character-swap prompts for tees, totes and tumblers. Pick your styles. Get one complete prompt for each.</p><button id="example">Try the truck example →</button></div><div class="quoteBox"><span class="eyebrow">Your exact words</span><blockquote id="quote">Your saying goes here.</blockquote><span class="hint">Text prompts only · no image-generation credits needed</span></div></section>
@@ -87,7 +88,7 @@ button,.import{min-height:44px}.style,.checkline{min-height:44px}.eyebrow{color:
 </div><aside class="resultsPane"><section class="panel"><div class="resultTop"><div><span class="eyebrow">Your prompt collection</span><h2>Ready to copy & create</h2><span id="resultCount" class="hint"></span></div></div><div class="actions"><button id="copyAll" disabled>Copy All</button><button id="copyBatch" disabled>Copy Batch Prompt</button><button id="saveFavorite" disabled>Save Favorite</button></div><details id="batchDetails" hidden><summary>Batch prompt · separate individual canvases</summary><p class="hint">Copy Batch Prompt adds instructions for one separate image per selected style, with variety and no collage. Paste it into an image generator that supports multiple outputs. This tool copies text; the image generator controls batching.</p><textarea id="batchText" aria-label="Batch prompt for separate individual canvases" readonly rows="10"></textarea></details><div id="empty" class="empty"><strong>One phrase. Many possibilities.</strong><p class="hint">Choose a saying, describe your scene, select styles, then click Generate prompts.</p></div><div id="results"></div><textarea id="manualCopy" aria-label="Manual clipboard fallback" rows="8" hidden></textarea></section>
 <section class="panel"><h2>Saved favorites <span id="favoriteCount" class="badge"></span></h2><div id="favorites"></div><div class="actions"><button id="export">Export backup</button><label class="import">Import backup<input id="import" type="file" accept=".json,application/json"></label></div><p class="hint">Backups include your draft, saved sayings and favorites. Imports merge collections. Reset preserves collections. Browser storage belongs to this file or website address; export before switching devices or clearing browser data.</p></section>
 </aside></div>
-<p class="footer">Independent creative tool · not affiliated with TikTok. Check text accuracy, print templates, and permission to use a saying before selling a design. Vector, embroidery and rhinestone styles create visual concepts, not production-ready vector, stitch or stone-placement files.</p>
+<footer class="footer" aria-label="Glam community and shop"></footer>
 </main><script>
 
 const APP_NAME="Flip the Catchphrase Studio";
@@ -577,7 +578,7 @@ const oldHelper=[...hero.querySelectorAll("p.hint")].find(n=>n.textContent.start
 studio.append(nav,content);
 main.insertBefore(studio,oldWorkspace);main.insertBefore(toolbar,oldWorkspace);oldWorkspace.remove();
 const footer=document.querySelector(".footer");
-footer.textContent="Text prompts only. Paste into your preferred image generator. Check wording and print dimensions before production.";
+footer.innerHTML="<a class=\"footerCTA\" href=\"https://payhip.com/b/54LoK\" target=\"_blank\" rel=\"noopener noreferrer\">✨ Join The Glam Vault</a><a class=\"footerCTA footerShop\" href=\"https://glamhustlehub.com\" target=\"_blank\" rel=\"noopener noreferrer\">🛍️ Shop Glam Hustle Hub</a>";
 let activeTab="welcome";
 const buildSteps=["sayings","scene","character","product","styles","typography"];
 function showTab(id){
@@ -587,7 +588,7 @@ for(const key of Object.keys(tabPanels)){tabPanels[key].hidden=key!==id;tabButto
 const index=buildSteps.indexOf(id);
 workflow.hidden=index<0;previous.disabled=index<=0;next.hidden=index===buildSteps.length-1;
 remixActions.hidden=id==="saved";
-footer.hidden=!welcome;
+footer.hidden=false;
 window.scrollTo({top:0,behavior:"instant"});
 }
 previous.addEventListener("click",()=>{const index=buildSteps.indexOf(activeTab);if(index>0)showTab(buildSteps[index-1]);});
